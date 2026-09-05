@@ -1,0 +1,23 @@
+{
+  "name": "giovanni-dev-br",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server.mjs",
+    "test": "NODE_ENV=test node --test test/*.test.mjs",
+    "test:browser": "npm run build && playwright test"
+  },
+  "dependencies": {
+    "dompurify": "3.4.14",
+    "marked": "18.0.11",
+    "pino": "10.3.1",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "vite": "^7.1.5"
+  }
+}
