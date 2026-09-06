@@ -1,0 +1,1213 @@
+{
+  "person": {
+    "name": "Giovanni Coutinho",
+    "title": "Platform Engineer",
+    "location": "Belo Horizonte, Brazil · Remote",
+    "resume": "https://resume.giovanni.dev.br",
+    "github": "https://github.com/giovannirco",
+    "linkedin": "https://www.linkedin.com/in/giovanni-coutinho",
+    "intro": "I run Kubernetes platforms and build tools for the engineers using them."
+  },
+  "sources": [
+    "Original project catalog",
+    "Resume master (maintained privately)"
+  ],
+  "bodies": [
+    {
+      "id": "survey",
+      "name": "Survey array",
+      "kind": "station",
+      "color": "#9fd4c4",
+      "radius": 0.82,
+      "orbit": 12,
+      "angle": 0.35,
+      "altitude": 0,
+      "sector": "Navigation",
+      "subtitle": "The whole orrery",
+      "blurb": "The whole system from one vantage. Every planet with its moons, and a course you can set without flying there first.",
+      "details": [
+        "Wandering is fine, and slow. When you actually want something, come up here, pick it off the chart, and let Nómada fly it."
+      ],
+      "tags": [
+        "Chart",
+        "Overview",
+        "Survey"
+      ],
+      "lesson": "Pick a destination and the ship takes the course.",
+      "prompts": [
+        "How do I fly to a moon?",
+        "Where can I read the resume?"
+      ]
+    },
+    {
+      "id": "heliograph",
+      "name": "Heliograph",
+      "kind": "relay",
+      "color": "#c6e6c2",
+      "radius": 0.36,
+      "orbit": 15.5,
+      "angle": 0.95,
+      "sector": "Relays",
+      "subtitle": "A quiet flash",
+      "blurb": "A small relay on the sunward side. If you want me to know you came through, this is how. Name and note are optional.",
+      "details": [
+        "Nothing here is about my work. It's just a way to say hello. A ping carries where you were in the orrery and a little about your connection, and the transport it rides on stays off the site."
+      ],
+      "tags": [
+        "Relay",
+        "Ping"
+      ],
+      "lesson": "Get close, then transmit.",
+      "prompts": [
+        "What is this relay?",
+        "Does a ping require a name?"
+      ]
+    },
+    {
+      "id": "umbra",
+      "name": "Umbra",
+      "kind": "relay",
+      "color": "#6a7d8a",
+      "radius": 0.32,
+      "orbit": 4.4,
+      "angle": 3.55,
+      "sector": "Relays",
+      "subtitle": "No sun here",
+      "blurb": "A relay in the star's shadow. Hard to spot until you're nearly on top of it.",
+      "details": [
+        "Line up near heading 180 when you ping and the log will say so. The rest is between you and the dark side."
+      ],
+      "tags": [
+        "Relay",
+        "Shadow"
+      ],
+      "lesson": "Look at the star, then look behind it.",
+      "prompts": [
+        "Why is this so close to the star?"
+      ]
+    },
+    {
+      "id": "ghost",
+      "name": "Ghost frequency",
+      "kind": "relay",
+      "color": "#b7c4d8",
+      "radius": 0.28,
+      "orbit": 63.5,
+      "angle": 0.18,
+      "unlock": "buoys:4",
+      "sector": "Relays",
+      "subtitle": "Silent until you listen",
+      "blurb": "A frequency out on the rim. It stays quiet until you've done the reading.",
+      "details": [
+        "Collect signal buoys around the system. The rim answers after four of them."
+      ],
+      "tags": [
+        "Relay",
+        "Hidden"
+      ],
+      "lesson": "Fragments first. Then the rim.",
+      "prompts": [
+        "How do I hear this frequency?"
+      ]
+    },
+    {
+      "id": "resume",
+      "name": "Resume station",
+      "kind": "station",
+      "color": "#e6d3a2",
+      "radius": 1.2,
+      "orbit": 22,
+      "angle": 2.4,
+      "sector": "The person",
+      "subtitle": "Giovanni Coutinho",
+      "href": "https://resume.giovanni.dev.br",
+      "linkLabel": "Read my resume",
+      "blurb": "I'm Gio. Platform engineer in Belo Horizonte, working remote. I started in Linux and enterprise networks and ended up running Kubernetes platforms and building the tooling around them.",
+      "details": [
+        "17 years in IT, 8 of them operating production Kubernetes. Most of that was almost seven years at Exodus Movement, on the global DevOps team behind a non-custodial crypto wallet and exchange. Money-adjacent production, which is a polite way of saying the pages matter.",
+        "The thread through all of it is enablement. Review-gated GitOps so a covered deploy didn't need a DevOps engineer standing behind it. Shared tooling other teams read to understand how we troubleshoot production. In the last year that turned into AI enablement: MCP servers, a skills toolkit, and mentoring people through agent work with review gates on it.",
+        "Before that, Kubernetes delivery and CI/CD for client engineering teams, and nine years of enterprise networking, VMware and Hyper-V, Linux, and Nagios and Zabbix pointed at SNMP targets. That last part is where the observability habit starts.",
+        "Technologist in Computer Networks at Centro Universitário UNA, 2010 to 2012. MBA coursework in Telecommunications Management at FUMEC, 2013 to 2014. Brazilian Portuguese native, English bilingual."
+      ],
+      "tags": [
+        "Platform engineering",
+        "Kubernetes",
+        "Belo Horizonte",
+        "Remote"
+      ],
+      "lesson": "Platform operations, incident response, AI enablement and engineering tools. The full record is in my resume.",
+      "prompts": [
+        "What kind of platform work do you do?",
+        "How do you use AI in engineering?",
+        "What did you do before Kubernetes?"
+      ]
+    },
+    {
+      "id": "production-ops",
+      "name": "Production operations",
+      "kind": "moon",
+      "parent": "resume",
+      "radius": 0.496,
+      "orbit": 5.5,
+      "angle": 0.25,
+      "color": "#c9d3ba",
+      "sector": "Resume / Areas of focus",
+      "subtitle": "Kubernetes day to day",
+      "blurb": "I run production Kubernetes. Cluster upgrades, autoscaling, infrastructure as code, and the pager.",
+      "details": [
+        "Multi-cluster Amazon EKS across four environments: dev, stage, shared and prod. Karpenter for nodes, Terraform and Terragrunt for the infrastructure, Helm for the services, Atlantis running the plans. EKS was the core job.",
+        "I've built a service up from nothing more than once. For a mobile app-attestation service that meant database, IRSA, KMS key, secrets and GitHub Actions CI/CD, working with its developer through to the first healthy deploy.",
+        "The one that taught me most was an Aurora and RDS upgrade campaign against an end-of-life deadline, six services on PostgreSQL 17.7 and 18.3. Blue/Green upgrades taken to production with each service owner, one cutover with a short write pause, and then automating the path so the rest weren't hand-run."
+      ],
+      "tags": [
+        "EKS",
+        "Karpenter",
+        "Terraform",
+        "PostgreSQL"
+      ],
+      "lesson": "Postgres upgrades across six services, with automation built from the first manual migrations.",
+      "href": "https://resume.giovanni.dev.br",
+      "linkLabel": "Read my resume",
+      "prompts": [
+        "What does your Kubernetes work involve?",
+        "How do you handle database upgrades?",
+        "What infrastructure tools do you use?"
+      ]
+    },
+    {
+      "id": "incident-response",
+      "name": "Incident response",
+      "kind": "moon",
+      "parent": "resume",
+      "radius": 0.496,
+      "orbit": 6.9,
+      "angle": 1.8,
+      "color": "#e2ac83",
+      "sector": "Resume / Areas of focus",
+      "subtitle": "From the page to the fix that sticks",
+      "blurb": "I drive production incidents on money-adjacent systems, then change the system so that class of failure stops paging.",
+      "details": [
+        "The one I like telling: deposit and swap paths started failing and the easy answer was the network. Hubble said it wasn't Cilium. The shared base image had drifted past its Node pin on a package update, so the runtime was lying about what it was. I pinned it and the money path came back.",
+        "Others were slower burns. A GraphQL service sat in CrashLoopBackOff for four days and 1,117 restarts before I got to it, which turned out to be an entrypoint path plus a pnpm version mismatch. A separate rollout had been failing silently for eight days on an undeclared workspace dependency, fixed in one line once anyone looked.",
+        "Communication while it's happening, postmortem after, then automation or a process change. Recurring pages die when you change the system, not the ticket."
+      ],
+      "tags": [
+        "On-call",
+        "Postmortems",
+        "Reliability",
+        "Debugging"
+      ],
+      "lesson": "Hubble ruled out Cilium; pinning the shared Node runtime restored the deposit and swap paths.",
+      "href": "https://resume.giovanni.dev.br",
+      "linkLabel": "Read my resume",
+      "prompts": [
+        "How do you approach an incident?",
+        "Tell me about a hard debugging session.",
+        "What happens after service is restored?"
+      ]
+    },
+    {
+      "id": "ai-enablement",
+      "name": "AI enablement",
+      "kind": "moon",
+      "parent": "resume",
+      "radius": 0.496,
+      "orbit": 7.9,
+      "angle": 3.6,
+      "color": "#bda8e8",
+      "sector": "Resume / Areas of focus",
+      "subtitle": "One planet over",
+      "blurb": "One of the four things I'm hired for, and it earned a planet of its own on this chart.",
+      "details": [
+        "Fly to AI enablement for the MCP servers, the shared skills toolkit, and the GPU node they get tested on."
+      ],
+      "tags": [
+        "MCP",
+        "Agent harnesses",
+        "TypeScript",
+        "Mentoring"
+      ],
+      "lesson": "The work is one planet over.",
+      "href": "https://resume.giovanni.dev.br",
+      "linkLabel": "Read my resume",
+      "prompts": [
+        "Where is the AI work?",
+        "What does AI enablement cover?"
+      ]
+    },
+    {
+      "id": "engineering-tools",
+      "name": "Engineering tools",
+      "kind": "moon",
+      "parent": "resume",
+      "radius": 0.496,
+      "orbit": 6.2,
+      "angle": 5.2,
+      "color": "#88c8d1",
+      "sector": "Resume / Areas of focus",
+      "subtitle": "Turn a workflow into something someone else can run",
+      "blurb": "When an operations workflow needs an interface, I build the tool instead of handing someone another script.",
+      "details": [
+        "The one I point at is a full-stack investigation tool for the legal and compliance team. API and frontend in TypeScript, hardened through a secops review, and its search rewritten onto the production database indexes when the naive query wouldn't hold up. It later became the first production Argo CD onboarding pilot.",
+        "That team was mostly lawyers and support people running queries by hand against systems they couldn't use. They needed something of their own, not a Grafana panel and a runbook.",
+        "Smaller things too: TypeScript and Node CLIs, Python and Bash, dashboard and alert automation, custom exporters. This site is on the same list."
+      ],
+      "tags": [
+        "TypeScript",
+        "Node.js",
+        "Full-stack",
+        "Python"
+      ],
+      "lesson": "TypeScript APIs and interfaces for operations teams, plus CLIs, exporters and alert automation.",
+      "href": "https://resume.giovanni.dev.br",
+      "linkLabel": "Read my resume",
+      "prompts": [
+        "What kinds of tools do you build?",
+        "Tell me about the compliance tool.",
+        "How do you automate observability work?"
+      ]
+    },
+    {
+      "id": "platform",
+      "name": "Platform",
+      "kind": "planet",
+      "color": "#86c9b1",
+      "radius": 1.7,
+      "orbit": 32,
+      "angle": 3.55,
+      "sector": "Platform engineering",
+      "subtitle": "From commit to cluster",
+      "blurb": "Multi-cluster EKS, and the delivery path that gets a commit into it without a DevOps engineer standing behind every release.",
+      "details": [
+        "I drove a 30+ service GitOps migration off GitLab-driven delivery onto Argo CD, environment by environment. That included the Cilium and network-policy repos, with no CNI disruption.",
+        "Terraform and Terragrunt describe the infrastructure, Atlantis runs the plans, Helm and Argo CD carry changes into the cluster. Kickstart templates and review gates are what made covered deploys stop needing us.",
+        "I measured Argo CD deploy latency once out of irritation and found GitHub webhooks failing HMAC validation on staging and prod. Syncs there took 4 to 16 minutes against seconds on dev. I filed it with the evidence and it got fixed."
+      ],
+      "tags": [
+        "AWS / EKS",
+        "Argo CD",
+        "Terraform",
+        "Atlantis"
+      ],
+      "lesson": "Terraform, Atlantis, Helm and Argo CD carry reviewed changes into EKS. Visit Homelab to unlock the GitOps lens.",
+      "prompts": [
+        "How does a change reach a cluster?",
+        "What did the GitOps migration involve?",
+        "How did you help teams adopt GitOps?"
+      ]
+    },
+    {
+      "id": "cilium",
+      "name": "Cilium",
+      "kind": "moon",
+      "parent": "platform",
+      "color": "#6bb8a0",
+      "radius": 0.44,
+      "orbit": 5.1,
+      "angle": 0.85,
+      "sector": "Platform / Networking",
+      "subtitle": "Isolation as code",
+      "blurb": "I drove Cilium onboarding after Calico, then moved the policies into Git so isolation gets reviewed like everything else.",
+      "details": [
+        "It earned itself once. An SSRF probe hit a production fiat path with an attacker-controlled URL. The L7 DNS proxy dropped the callback, IMDS egress was denied, and nothing got a 200 back out. I ran the cluster-wide policy audit afterwards and handed the application sink to the team that owned it.",
+        "Getting there meant network-policy CI with Helm templates, and Prometheus exporters so we could see how much of the fleet was actually covered rather than assuming. Then Cilium and the policies moved to GitOps across every environment with ApplicationSets and autoSync. Manual drift reverts itself now.",
+        "Later I upgraded Cilium across environments after reading up on DNS-proxy behaviour changes over four minor versions. DNS timeouts measurably improved."
+      ],
+      "tags": [
+        "Cilium",
+        "Network policy",
+        "Hubble",
+        "GitOps"
+      ],
+      "lesson": "Network-policy CI, Helm templates and coverage exporters supported the move to GitOps.",
+      "prompts": [
+        "What did you build around Cilium?",
+        "Tell me about the SSRF.",
+        "How do network policies fit into GitOps?"
+      ]
+    },
+    {
+      "id": "argo",
+      "name": "Argo CD",
+      "kind": "moon",
+      "parent": "platform",
+      "color": "#c5e3d4",
+      "radius": 0.464,
+      "orbit": 6.6,
+      "angle": 3.5,
+      "sector": "Platform / Delivery",
+      "subtitle": "Reviewed delivery",
+      "blurb": "Argo CD is the delivery path. I onboarded the applications onto it and built the templates that made releases self-serve.",
+      "details": [
+        "Setup and adoption was team work; a colleague owned the install. I onboarded the non-coin-node applications off GitLab-driven delivery, including the ones that needed a custom migration design rather than a standard Helm chart.",
+        "Moving observability across was the delicate one. Grafana and the exporters still deployed from GitLab, and a naive first sync would have pruned dashboards that already existed in production. So I reconciled Git to what prod actually had, and only then turned the old pipeline off.",
+        "GitOps deploys also dropped the CI provenance labels our Grafana boards grouped on, which quietly blanked them. I made the chart labels source-agnostic so a migrated service still looked like itself."
+      ],
+      "tags": [
+        "Argo CD",
+        "Helm",
+        "ApplicationSets",
+        "GitOps"
+      ],
+      "lesson": "I onboarded applications onto the existing Argo CD installation, including custom migration paths.",
+      "prompts": [
+        "What did you contribute to Argo CD adoption?",
+        "How did you move observability onto GitOps?",
+        "What were the kickstart templates for?"
+      ]
+    },
+    {
+      "id": "ai",
+      "name": "AI enablement",
+      "kind": "planet",
+      "color": "#b79ce6",
+      "radius": 1.55,
+      "orbit": 28,
+      "angle": 1.55,
+      "sector": "AI enablement",
+      "subtitle": "Tools engineers actually use",
+      "blurb": "I build the tooling that lets other engineers use agents on real production work, and the review gates that make that survivable.",
+      "details": [
+        "Two production MCP servers in TypeScript, shipped with tests, versioned releases and setup docs. A shared DevOps skills toolkit that teammates used day to day. A docs-and-examples repo next to it, and onboarding for colleagues moving onto Claude Code and the MCP toolchain.",
+        "I mentored DevOps and product engineers on agent harnesses, anywhere from a full walkthrough to efficiency coaching. The rule was always reviewable agent use on real production work rather than demos.",
+        "I evaluated centralised MCP hosting and gateway options for auth, per-tool policy, secrets isolation and OpenTelemetry. None of it cut over to production before I left."
+      ],
+      "tags": [
+        "MCP",
+        "TypeScript",
+        "Agent harnesses",
+        "Mentoring"
+      ],
+      "lesson": "Production MCP servers, shared skills, setup docs and hands-on onboarding for engineers.",
+      "prompts": [
+        "What MCP servers did you write?",
+        "How do you keep agent work reviewable?",
+        "What didn't work out?"
+      ]
+    },
+    {
+      "id": "observe-mcp",
+      "name": "Observe MCP",
+      "kind": "moon",
+      "parent": "ai",
+      "color": "#9ec9ee",
+      "radius": 0.4,
+      "orbit": 4.6,
+      "angle": 0.55,
+      "sector": "AI enablement / AI tools",
+      "subtitle": "Logs and metrics where the work happens",
+      "blurb": "Observe MCP puts logs and metrics into the investigation path itself. I authored it with a collaborator.",
+      "details": [
+        "TypeScript, with tests, versioned releases and setup docs. The whole DevOps team used it, plus a few developers on other teams.",
+        "The problem it solves is unglamorous. An investigation used to mean four UIs and a lot of copying between them. This put the data where the question was already being asked."
+      ],
+      "tags": [
+        "Observe MCP",
+        "TypeScript",
+        "Logs",
+        "Metrics"
+      ],
+      "lesson": "Used by the DevOps team day to day, and by a few developers on other teams.",
+      "prompts": [
+        "What can Observe MCP investigate?",
+        "What was your contribution?"
+      ]
+    },
+    {
+      "id": "skills-toolkit",
+      "name": "Skills toolkit",
+      "kind": "moon",
+      "parent": "ai",
+      "color": "#c9b4ef",
+      "radius": 0.432,
+      "orbit": 6.1,
+      "angle": 2.55,
+      "sector": "AI enablement / Shared tooling",
+      "subtitle": "How DevOps troubleshoots, written down",
+      "blurb": "A shared DevOps AI skills and agents toolkit, built so routine platform work stopped queueing on our team.",
+      "details": [
+        "It covers RDS upgrades, platform onboarding, dashboard creation, metric-based investigation and security guardrails, with a shared docs-and-examples repo beside it. Teammates used it day to day, and other teams read it to work out how DevOps troubleshoots production.",
+        "I handed the Argo migration skill to the developers instead of running it for them. Same rule when I teach one of these: they share their screen and they type, I talk. I don't take the keyboard to look fast."
+      ],
+      "tags": [
+        "Skills",
+        "Runbooks",
+        "Guardrails",
+        "Enablement"
+      ],
+      "lesson": "Developers used the Argo migration skill themselves, with coaching and review.",
+      "prompts": [
+        "What's in the toolkit?",
+        "How do you teach this stuff?"
+      ]
+    },
+    {
+      "id": "gpu-lab",
+      "name": "GPU node",
+      "kind": "moon",
+      "parent": "ai",
+      "color": "#8fd3c4",
+      "radius": 0.416,
+      "orbit": 8.4,
+      "angle": 4.75,
+      "sector": "AI enablement / Local models",
+      "subtitle": "Models that stay on the box",
+      "blurb": "A GPU node in the homelab cluster, for model work that should stay on my own hardware.",
+      "details": [
+        "Ollama and smaller open models. It sits in the same Talos cluster as everything else, so an experiment gets real storage, networking and GitOps instead of living on a laptop.",
+        "It's also where I find out whether a local model is good enough before assuming the job needs a hosted one. Sometimes it is, and knowing that before the data leaves the house is the whole reason to check."
+      ],
+      "tags": [
+        "Ollama",
+        "Local models",
+        "Bare metal"
+      ],
+      "lesson": "Local model workloads run on the homelab GPU node.",
+      "prompts": [
+        "Why run models locally?",
+        "What do you use it for?"
+      ]
+    },
+    {
+      "id": "checkly-mcp",
+      "name": "Checkly MCP",
+      "kind": "moon",
+      "parent": "ai",
+      "color": "#6ea8d8",
+      "radius": 0.4,
+      "orbit": 9.6,
+      "angle": 6,
+      "sector": "AI enablement / AI tools",
+      "subtitle": "Synthetics in the same conversation",
+      "blurb": "Checkly MCP brings synthetic-monitoring and alerting context into an investigation. I authored it.",
+      "details": [
+        "Same shape as Observe MCP: TypeScript, tests, versioned releases, setup docs. Agents used this one directly.",
+        "Synthetics tell you what a user would have seen. Having that sitting next to logs and metrics changes what you check first, and usually shortens the argument about whether something is actually broken."
+      ],
+      "tags": [
+        "Checkly MCP",
+        "Synthetics",
+        "Alerting",
+        "TypeScript"
+      ],
+      "lesson": "Synthetics answer a different question than logs do.",
+      "prompts": [
+        "What does Checkly MCP add?",
+        "Who used it?"
+      ]
+    },
+    {
+      "id": "metrics",
+      "name": "Site telemetry",
+      "kind": "planet",
+      "color": "#6fd3a8",
+      "radius": 1.35,
+      "orbit": 26,
+      "angle": 4.9,
+      "sector": "This site",
+      "subtitle": "The orrery watching itself",
+      "blurb": "Everything this site knows about itself, read live from the same Mimir that watches the rest of the homelab.",
+      "details": [
+        "The pod exports Prometheus metrics on a cluster-only endpoint, Alloy scrapes it, and the numbers on these moons come back out of Mimir through an allowlisted read.",
+        "Visitor figures are browser-reported sessions, not verified people."
+      ],
+      "tags": [
+        "Prometheus",
+        "Mimir",
+        "Alloy",
+        "PromQL"
+      ],
+      "lesson": "This site exports metrics to the same Mimir that monitors the homelab.",
+      "prompts": [
+        "Where do these numbers come from?",
+        "Why are visitor counts an estimate?",
+        "What else do you measure?"
+      ]
+    },
+    {
+      "id": "metrics-flight",
+      "name": "Flight recorder",
+      "kind": "moon",
+      "parent": "metrics",
+      "color": "#8fe0bf",
+      "radius": 0.4,
+      "orbit": 4.4,
+      "angle": 1.1,
+      "sector": "This site / Visitors",
+      "subtitle": "Who is flying, and for how long",
+      "blurb": "Live counts of who is out there right now, how many flights started in the last 24 hours, and roughly how long a flight lasts.",
+      "details": [
+        "Average flight time is derived, not measured directly: a ship sends a heartbeat every 15 seconds, so heartbeats divided by flights gives an estimate of how long people stay."
+      ],
+      "tags": [
+        "Visitors",
+        "Sessions",
+        "PromQL"
+      ],
+      "lesson": "Flight duration is estimated from heartbeats. First-frame timing is reported by the browser.",
+      "prompts": [
+        "How is average flight time calculated?"
+      ]
+    },
+    {
+      "id": "metrics-comm",
+      "name": "COMM traffic",
+      "kind": "moon",
+      "parent": "metrics",
+      "color": "#63c8b4",
+      "radius": 0.4,
+      "orbit": 6.2,
+      "angle": 3.1,
+      "sector": "This site / Assistant",
+      "subtitle": "Questions, failures, refusals",
+      "blurb": "How many questions reached the orbit assistant in the last 24 hours, how many failed upstream, and how many the rate limiter turned away.",
+      "details": [
+        "The refusals matter as much as the answers. The assistant runs on my own LLM gateway, so an unmetered endpoint would be someone else spending my quota. Throttled requests never reach the gateway at all."
+      ],
+      "tags": [
+        "COMM",
+        "Rate limits",
+        "Errors"
+      ],
+      "lesson": "Track opened conversations, sent questions, failures and rate limits separately.",
+      "prompts": [
+        "What happens when the limit is hit?"
+      ]
+    },
+    {
+      "id": "metrics-routes",
+      "name": "Traffic map",
+      "kind": "moon",
+      "parent": "metrics",
+      "color": "#a5e6cd",
+      "radius": 0.4,
+      "orbit": 8.1,
+      "angle": 5.3,
+      "sector": "This site / Destinations",
+      "subtitle": "Where people actually go",
+      "blurb": "The destinations visitors enter orbit around most, counted over the last week.",
+      "details": [
+        "Useful and slightly humbling. What I think is the interesting part of this system and what people actually fly to are not always the same, and the counter does not care about my opinion."
+      ],
+      "tags": [
+        "Destinations",
+        "PromQL",
+        "Instrumentation"
+      ],
+      "lesson": "These counts show which destinations visitors enter.",
+      "prompts": [
+        "Which destination is most visited?"
+      ]
+    },
+    {
+      "id": "metrics-reading",
+      "name": "Reading room",
+      "kind": "moon",
+      "parent": "metrics",
+      "color": "#7fdcc0",
+      "radius": 0.4,
+      "orbit": 9.6,
+      "angle": 1.9,
+      "sector": "This site / Dossiers",
+      "subtitle": "Which notes get opened",
+      "blurb": "The dossiers visitors actually open, counted over the last week.",
+      "details": [
+        "Entering orbit and reading the notes are different actions, so they are counted separately. Someone can fly past a dozen destinations without opening one, and the star chart lets you read a dossier before you ever take the controls."
+      ],
+      "tags": [
+        "Dossiers",
+        "PromQL",
+        "Instrumentation"
+      ],
+      "lesson": "Notes opened are counted separately from orbit arrivals.",
+      "prompts": [
+        "Which dossier is read most?"
+      ]
+    },
+    {
+      "id": "observe",
+      "name": "Observability",
+      "kind": "planet",
+      "color": "#81bce9",
+      "radius": 1.45,
+      "orbit": 36,
+      "angle": 5.45,
+      "sector": "Observability",
+      "subtitle": "Metrics, logs, traces, and the bill",
+      "blurb": "I ran company observability for years and led the move to Grafana Cloud, after making the metrics cheap enough to justify it.",
+      "details": [
+        "I led the cardinality reduction. It started around 20% off Mimir from scrapers and basic hygiene, and reached about 70% by the Cloud cutover through keep/drop decisions, traces-to-metrics knobs, and coaching application teams on how they emit metrics in the first place.",
+        "The path there went Sumo Logic, Splunk, Datadog and Observe, then self-hosted Prometheus and Thanos into Mimir, Loki and Tempo, and finally Grafana Cloud. Shipping went Promtail and Fluent, then Alloy. I also ran KEDA in production for Mimir scale-up and scale-down until the Cloud move made it unnecessary.",
+        "After the cutover, billable metrics came in at twice the real volume. Alloy clustering was broken, so the same series shipped and billed twice. Mimir HA deduplication across every environment fixed it.",
+        "The MCP servers I wrote for investigation orbit AI enablement now."
+      ],
+      "tags": [
+        "Grafana Cloud",
+        "Mimir",
+        "Cardinality",
+        "OpenTelemetry"
+      ],
+      "lesson": "Cardinality reduction and Mimir HA deduplication addressed different sources of cost. Visit Bitcoin to unlock the signal decoder.",
+      "prompts": [
+        "Why move to Grafana Cloud?",
+        "What did cardinality reduction change?",
+        "Tell me about the billing problem."
+      ]
+    },
+    {
+      "id": "cardinality",
+      "name": "Cardinality",
+      "kind": "moon",
+      "parent": "observe",
+      "color": "#9fd0f2",
+      "radius": 0.336,
+      "orbit": 4.7,
+      "angle": 0.9,
+      "sector": "Observability / Cost and hygiene",
+      "subtitle": "Deciding what dies",
+      "blurb": "I led the cardinality-reduction program that made the move to Grafana Cloud the cheaper option.",
+      "details": [
+        "It started around 20% off Mimir from scrapers and basic hygiene, and reached about 70% by the cutover. Keep/drop decisions, traces-to-metrics knobs, and a lot of conversations with application teams about how they emit metrics in the first place.",
+        "Tooling is good at finding waste. It is not good at deciding what the team can afford to lose, which is the part that took the time."
+      ],
+      "tags": [
+        "Mimir",
+        "Grafana Cloud",
+        "PromQL",
+        "Cost"
+      ],
+      "lesson": "Keep/drop rules, traces-to-metrics settings and application instrumentation drove the reduction.",
+      "prompts": [
+        "How do you reduce cardinality?",
+        "What did teams have to change?"
+      ]
+    },
+    {
+      "id": "alloy",
+      "name": "Alloy",
+      "kind": "moon",
+      "parent": "observe",
+      "color": "#7fb6e0",
+      "radius": 0.336,
+      "orbit": 6.4,
+      "angle": 2.7,
+      "sector": "Observability / Pipeline",
+      "subtitle": "The ship path, and what it hid",
+      "blurb": "Alloy carries the telemetry. It also quietly billed everything twice for a while.",
+      "details": [
+        "The log and metric ship path went Promtail and Fluent first, then Alloy into the on-prem stack, and finally into Grafana Cloud.",
+        "After the cutover, billable metrics came in at twice the real volume. Alloy clustering was broken, so the same series shipped twice and got billed twice. Mimir HA deduplication across every environment fixed it."
+      ],
+      "tags": [
+        "Alloy",
+        "Mimir HA",
+        "Promtail",
+        "OpenTelemetry"
+      ],
+      "lesson": "Mimir HA deduplication stopped duplicate series from being billed twice.",
+      "prompts": [
+        "What is Alloy for?",
+        "How did you find the double billing?"
+      ]
+    },
+    {
+      "id": "dashboards",
+      "name": "Dashboards as code",
+      "kind": "moon",
+      "parent": "observe",
+      "color": "#b5d9f5",
+      "radius": 0.336,
+      "orbit": 8.3,
+      "angle": 4.6,
+      "sector": "Observability / Delivery",
+      "subtitle": "Boards that survive a migration",
+      "blurb": "Dashboards provisioned from git, so their real state is the reviewed state.",
+      "details": [
+        "Provisioning boards from files makes them reviewable and stops them drifting in a UI where anyone can nudge a panel and nobody can tell.",
+        "The migration to GitOps broke them once. Argo deploys dropped the CI provenance labels the boards grouped on, so panels went blank for migrated services. I made the chart labels source-agnostic and validated it on a pilot service before touching the fleet."
+      ],
+      "tags": [
+        "Grafana",
+        "Provisioning",
+        "PromQL",
+        "GitOps"
+      ],
+      "lesson": "Provisioned dashboards and source-agnostic chart labels kept panels working through the GitOps migration.",
+      "prompts": [
+        "Why provision dashboards from git?",
+        "What broke during the migration?"
+      ]
+    },
+    {
+      "id": "homelab",
+      "name": "Homelab",
+      "kind": "planet",
+      "color": "#d88f69",
+      "radius": 1.85,
+      "orbit": 46,
+      "angle": 2.9,
+      "sector": "Personal infrastructure",
+      "subtitle": "Talos on bare metal",
+      "blurb": "A multi-node bare-metal Talos cluster at home, with reviewed Git changes for the services running on it.",
+      "details": [
+        "Cilium for networking, Gateway API with Envoy at the edge, and Argo CD doing App-of-Apps and ApplicationSets across a cluster-root repo and per-tenant repos. Storage is OpenEBS local NVMe plus NFS, with Velero backups.",
+        "The public edge goes out over a Cloudflare tunnel with external-dns. On the LAN the same names resolve through split-horizon DNS on Technitium, a primary plus a catalog secondary.",
+        "It runs my Bitcoin full node with Fulcrum and mempool, a Grafana, Mimir, Loki and Tempo stack, shared Postgres and MariaDB, a GPU node, and Rubinot. This site is on it too, which is why the block height at the bottom of your screen is real."
+      ],
+      "tags": [
+        "Talos",
+        "Cilium",
+        "Argo CD",
+        "Envoy Gateway"
+      ],
+      "lesson": "Talos, GitOps, storage and observability run the services I use at home.",
+      "prompts": [
+        "What runs in the homelab?",
+        "How do you handle storage and backups?",
+        "Why bare metal?"
+      ]
+    },
+    {
+      "id": "bitcoin",
+      "name": "Bitcoin beacon",
+      "kind": "beacon",
+      "parent": "homelab",
+      "color": "#f5bf65",
+      "radius": 0.576,
+      "orbit": 5.4,
+      "angle": 1.15,
+      "sector": "Live from the homelab",
+      "subtitle": "My node's mempool",
+      "blurb": "Live block height, mempool backlog and fee estimates, read from the node in my own house.",
+      "details": [
+        "I run a Bitcoin full node with Fulcrum and mempool on the homelab cluster. The numbers on the instrument panel come from that node through an allowlisted read-only proxy, not from a public API.",
+        "Fee targets are estimates. Confirmation times are nobody's promise, and a zero-fee reading is a real one, so the panel shows it as such."
+      ],
+      "tags": [
+        "Bitcoin",
+        "Full node",
+        "mempool",
+        "Fulcrum"
+      ],
+      "lesson": "The readings here come from my full node through mempool.",
+      "prompts": [
+        "How does Bitcoin fit into your homelab?",
+        "Where do these numbers come from?"
+      ]
+    },
+    {
+      "id": "fulcrum",
+      "name": "Fulcrum",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#c9a27a",
+      "radius": 0.416,
+      "orbit": 6.8,
+      "angle": 3.35,
+      "sector": "Personal infrastructure",
+      "subtitle": "Beside the node",
+      "blurb": "Fulcrum is the Electrum server sitting next to my Bitcoin node. It indexes the chain so a wallet can ask about an address without scanning everything itself.",
+      "details": [
+        "It runs on the homelab cluster with the node and mempool. None of it is reachable from the internet. The only Bitcoin data that leaves the house is the handful of read-only numbers on the instrument panel."
+      ],
+      "tags": [
+        "Fulcrum",
+        "Electrum",
+        "Bitcoin",
+        "Indexing"
+      ],
+      "lesson": "None of it is reachable from outside the house.",
+      "prompts": [
+        "What does Fulcrum do?",
+        "Is any of it exposed?"
+      ]
+    },
+    {
+      "id": "rubinot",
+      "name": "Rubinot",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#efa964",
+      "radius": 0.56,
+      "orbit": 8.1,
+      "angle": 5.05,
+      "sector": "Personal project",
+      "subtitle": "Personal game statistics",
+      "href": "https://rubinot-eve.otservices.space",
+      "linkLabel": "Explore Rubinot",
+      "blurb": "Rubinot is my personal game-stats product. API and data workloads, running on the homelab.",
+      "details": [
+        "PostgreSQL through CloudNativePG, and ClickHouse on a lab VM for the analytics side.",
+        "It's the thing that keeps the homelab honest. A real workload with real data and someone who notices when it's down teaches more than a demo I can restart whenever I like."
+      ],
+      "tags": [
+        "Game stats",
+        "CloudNativePG",
+        "ClickHouse",
+        "PostgreSQL"
+      ],
+      "lesson": "Real data and real uptime expectations, which is what makes the lab worth having.",
+      "prompts": [
+        "What is Rubinot's data stack?",
+        "Where do its workloads run?"
+      ]
+    },
+    {
+      "id": "lab-grafana",
+      "name": "Lab Grafana",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#e0a07a",
+      "radius": 0.4,
+      "orbit": 9.3,
+      "angle": 0.45,
+      "sector": "Personal infrastructure",
+      "subtitle": "Homelab observability",
+      "blurb": "Grafana, Mimir, Loki and Tempo in the homelab. The same stack I ran at work, at a size where I can break it.",
+      "details": [
+        "It's where an upgrade or a config change happens before it matters. What I learned running this at company scale shapes the lab, and what falls over in the lab is a lot cheaper than finding it in production."
+      ],
+      "tags": [
+        "Grafana",
+        "Mimir",
+        "Loki",
+        "Tempo"
+      ],
+      "lesson": "Grafana, Mimir, Loki and Tempo monitor the homelab.",
+      "prompts": [
+        "What's in the lab's observability stack?",
+        "What do you use it for?"
+      ]
+    },
+    {
+      "id": "envoy",
+      "name": "Envoy Gateway",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#e0a97f",
+      "radius": 0.4,
+      "orbit": 7.5,
+      "angle": 2.2,
+      "sector": "Personal infrastructure / Networking",
+      "subtitle": "Gateway API at the edge",
+      "blurb": "Ingress on Gateway API with Envoy, split between an internal listener and a public one.",
+      "details": [
+        "The public edge goes out through a Cloudflare tunnel with external-dns managing the records. On the LAN the same hostnames resolve straight to the cluster through split-horizon DNS on Technitium. You're reading this page through that path right now.",
+        "Keeping the two listeners separate is what lets me put something on the LAN without also deciding to put it on the internet. That decision should be deliberate every time."
+      ],
+      "tags": [
+        "Gateway API",
+        "Envoy",
+        "Cloudflare",
+        "external-dns"
+      ],
+      "lesson": "Internal and public listeners stay separate on purpose.",
+      "prompts": [
+        "How is the homelab exposed?",
+        "What handles DNS?"
+      ]
+    },
+    {
+      "id": "storage",
+      "name": "Storage",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#c9926b",
+      "radius": 0.4,
+      "orbit": 10.4,
+      "angle": 4.15,
+      "sector": "Personal infrastructure / Storage",
+      "subtitle": "Local NVMe, NFS, backups",
+      "blurb": "Storage is OpenEBS on local NVMe plus NFS, with Velero handling backups.",
+      "details": [
+        "Local NVMe is fast and honest about where the data physically is. NFS covers the things that want to be shared between nodes.",
+        "Rook-Ceph and Longhorn were both the answer here at some point, and both are retired. I keep saying that out loud, because the paths I abandoned are most of the reason the current one is defensible."
+      ],
+      "tags": [
+        "OpenEBS",
+        "NFS",
+        "Velero"
+      ],
+      "lesson": "Rook-Ceph and Longhorn were both the answer here once.",
+      "prompts": [
+        "Why OpenEBS?",
+        "What happened to Longhorn?"
+      ]
+    },
+    {
+      "id": "cnpg",
+      "name": "Data services",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#d9a878",
+      "radius": 0.4,
+      "orbit": 11.4,
+      "angle": 5.85,
+      "sector": "Personal infrastructure / Data",
+      "subtitle": "Postgres and MariaDB as a platform service",
+      "blurb": "CloudNativePG and MariaDB Galera, run as a shared platform service rather than a database bolted onto each application.",
+      "details": [
+        "An application asks the platform for a database and gets one. Rubinot's PostgreSQL runs here.",
+        "Same instinct as the rest of the cluster: solve it once at the platform layer so nobody else has to solve it badly six times."
+      ],
+      "tags": [
+        "CloudNativePG",
+        "MariaDB Galera",
+        "PostgreSQL"
+      ],
+      "lesson": "Rubinot is the main consumer.",
+      "prompts": [
+        "What databases run in the homelab?",
+        "Who uses them?"
+      ]
+    },
+    {
+      "id": "talos",
+      "name": "Talos cluster",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#8fb8d8",
+      "radius": 0.46,
+      "orbit": 5.9,
+      "angle": 1.8,
+      "sector": "Personal infrastructure",
+      "subtitle": "The machines under everything",
+      "blurb": "The Talos control plane and its worker machines. Every other body in this orbit runs on top of these.",
+      "details": [
+        "Talos has no shell and no package manager: the machines are configured by API and replaced rather than repaired, which is the point. Argo CD reconciles what runs on them, Cilium carries the traffic and OpenEBS keeps the volumes on local NVMe.",
+        "The schematic reads the cluster live. A machine that stops reporting shows as unknown rather than idle, because those are not the same thing and a dashboard that confuses them is how an outage gets missed."
+      ],
+      "tags": [
+        "Talos",
+        "Kubernetes",
+        "Argo CD",
+        "Cilium"
+      ],
+      "lesson": "Machines you replace instead of repairing are machines you stop being afraid of.",
+      "prompts": [
+        "What runs the homelab cluster?",
+        "Why Talos instead of a normal distro?"
+      ]
+    },
+    {
+      "id": "bitops",
+      "name": "BitOps",
+      "kind": "crystal",
+      "color": "#e0e2d5",
+      "radius": 1.3,
+      "orbit": 40,
+      "angle": 5.9,
+      "sector": "Consultoria",
+      "subtitle": "Kubernetes consultoria",
+      "href": "https://bitops.com.br",
+      "linkLabel": "Visit BitOps",
+      "blurb": "BitOps is my consultoria. Kubernetes, GitOps, observability, and getting agent tooling into a team's real workflow.",
+      "details": [
+        "I offer cluster operations, reviewed delivery, observability and agent tooling through BitOps.",
+        "The BitOps site has the scope and contact details."
+      ],
+      "tags": [
+        "Kubernetes",
+        "GitOps",
+        "Observability",
+        "MCP"
+      ],
+      "lesson": "Scope and contact live on the BitOps site.",
+      "prompts": [
+        "What does BitOps focus on?",
+        "Where can I learn more?"
+      ]
+    },
+    {
+      "id": "bitops-kubernetes",
+      "name": "Kubernetes",
+      "kind": "moon",
+      "parent": "bitops",
+      "color": "#e6e8dc",
+      "radius": 0.368,
+      "orbit": 3.6,
+      "angle": 0.7,
+      "sector": "BitOps / Practice",
+      "subtitle": "Clusters, upgrades, operations",
+      "blurb": "Running clusters, and keeping them in a state where the next upgrade is boring.",
+      "details": [
+        "Cluster operations, version upgrades, node autoscaling, and the capacity work underneath all of it. The upgrade path is the part teams put off, and it's the part that decides how long the cluster stays usable."
+      ],
+      "tags": [
+        "Kubernetes",
+        "Upgrades",
+        "Autoscaling"
+      ],
+      "lesson": "Cluster operations, version upgrades, autoscaling and capacity planning.",
+      "prompts": [
+        "What Kubernetes work does BitOps take on?"
+      ]
+    },
+    {
+      "id": "bitops-gitops",
+      "name": "GitOps",
+      "kind": "moon",
+      "parent": "bitops",
+      "color": "#dfe3d2",
+      "radius": 0.368,
+      "orbit": 4.9,
+      "angle": 2.35,
+      "sector": "BitOps / Practice",
+      "subtitle": "Delivery as reviewed Git changes",
+      "blurb": "Delivery through reviewed Git changes, so shipping doesn't depend on who happens to be awake.",
+      "details": [
+        "Argo CD, App-of-Apps, kickstart templates and review gates. What I'm aiming at is a service owner shipping their own change with a reviewer, and a platform engineer who isn't in the loop for every release."
+      ],
+      "tags": [
+        "GitOps",
+        "Argo CD",
+        "Review gates"
+      ],
+      "lesson": "Reviewed Git changes describe what runs in the cluster.",
+      "prompts": [
+        "How does BitOps approach GitOps?"
+      ]
+    },
+    {
+      "id": "bitops-observe",
+      "name": "Observability",
+      "kind": "moon",
+      "parent": "bitops",
+      "color": "#d6dfd0",
+      "radius": 0.368,
+      "orbit": 6.2,
+      "angle": 3.95,
+      "sector": "BitOps / Practice",
+      "subtitle": "Legible while it runs, affordable while it does",
+      "blurb": "Making a platform legible once it's running, and keeping the bill attached to reality.",
+      "details": [
+        "Metrics, logs and traces, plus the unglamorous half: what you keep, what you drop, and what you're actually being billed for. Most observability problems I meet are cardinality problems wearing a cost costume."
+      ],
+      "tags": [
+        "Observability",
+        "Cardinality",
+        "Cost"
+      ],
+      "lesson": "Metric selection and billing are part of running observability.",
+      "prompts": [
+        "What observability work does BitOps do?"
+      ]
+    },
+    {
+      "id": "bitops-mcp",
+      "name": "MCP enablement",
+      "kind": "moon",
+      "parent": "bitops",
+      "color": "#cfe0d8",
+      "radius": 0.368,
+      "orbit": 7.4,
+      "angle": 5.5,
+      "sector": "BitOps / Practice",
+      "subtitle": "Agent tooling for teams",
+      "blurb": "Getting agent tooling into a team's real workflow, with gates that keep it reviewable.",
+      "details": [
+        "MCP servers against the systems a team already runs, skills for the workflows they already have, and review gates so an agent's output goes through the same door a human's does."
+      ],
+      "tags": [
+        "MCP",
+        "Agent harnesses",
+        "Review gates"
+      ],
+      "lesson": "MCP servers, shared skills and review gates fit into the team’s existing workflow.",
+      "prompts": [
+        "What does MCP enablement involve?"
+      ]
+    },
+    {
+      "id": "scout",
+      "name": "Job Scout",
+      "kind": "probe",
+      "color": "#b7a0e3",
+      "radius": 0.85,
+      "orbit": 58,
+      "angle": 4.5,
+      "sector": "Personal tooling",
+      "subtitle": "Running a job search like an operations problem",
+      "blurb": "Job Scout is my opportunity desk: the tooling I built to run my own search the way I'd run a platform.",
+      "details": [
+        "Intake, scoring, tracking, and the writing that goes with an application. It exists because a search run out of a spreadsheet and forty browser tabs loses information, and because I'd rather debug a pipeline than try to remember things.",
+        "No listings, company names or application statuses are published here. That data stays private. What's on show is the tooling."
+      ],
+      "tags": [
+        "Job search",
+        "Operational tooling",
+        "Automation"
+      ],
+      "lesson": "Intake, scoring, tracking and application writing share one workflow.",
+      "prompts": [
+        "What is Job Scout for?",
+        "Why build this instead of using a spreadsheet?"
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "id": "buoy-cilium",
+      "parent": "platform",
+      "orbit": 9.2,
+      "angle": 1.7,
+      "name": "Policy fragment",
+      "note": "Cilium onboarding, then network policies in Git."
+    },
+    {
+      "id": "buoy-gitops",
+      "orbit": 38,
+      "angle": 3.2,
+      "name": "Review gate",
+      "note": "Kickstart templates so covered releases did not need a DevOps engineer at every step."
+    },
+    {
+      "id": "buoy-card",
+      "parent": "observe",
+      "orbit": 8.4,
+      "angle": 2.6,
+      "name": "Cardinality note",
+      "note": "Grafana Cloud after reducing unnecessary metric cardinality."
+    },
+    {
+      "id": "buoy-mcp",
+      "parent": "ai",
+      "orbit": 11,
+      "angle": 3.3,
+      "name": "MCP packet",
+      "note": "Observe MCP, with a collaborator, and Checkly MCP."
+    },
+    {
+      "id": "buoy-talos",
+      "parent": "homelab",
+      "orbit": 11.2,
+      "angle": 2.1,
+      "name": "Bare-metal ping",
+      "note": "Talos, Envoy Gateway, OpenEBS, Velero. Personal cluster."
+    },
+    {
+      "id": "buoy-node",
+      "parent": "homelab",
+      "orbit": 11.6,
+      "angle": 4.7,
+      "name": "Mempool tick",
+      "note": "My Bitcoin full node, Fulcrum, and mempool run in the homelab."
+    },
+    {
+      "id": "buoy-bitops",
+      "parent": "bitops",
+      "orbit": 6.4,
+      "angle": 0.9,
+      "name": "Consultoria mark",
+      "note": "Kubernetes, GitOps, observability, MCP enablement."
+    },
+    {
+      "id": "buoy-resume",
+      "parent": "resume",
+      "orbit": 5.2,
+      "angle": 5.8,
+      "name": "Career record",
+      "note": "The readable CV lives on resume.giovanni.dev.br."
+    }
+  ]
+}
