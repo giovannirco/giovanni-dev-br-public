@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#080f17" />
+    <title>Giovanni Coutinho — Platform Engineer</title>
+    <meta
+      name="description"
+      content="Platform Engineer in Belo Horizonte. Explore Giovanni Coutinho’s work in Kubernetes, GitOps, observability, and a bare-metal homelab."
+    />
+    <link rel="canonical" href="https://giovanni.dev.br/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <a class="skip-link" href="https://resume.giovanni.dev.br"
+      >Skip to my resume</a
+    >
+    <canvas
+      id="scene"
+      aria-label="A compact solar system of Giovanni’s work. Use the destination buttons or star chart to explore."
+    ></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="frame-corner top-left" aria-hidden="true"></div>
+    <div class="frame-corner bottom-right" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="identity" href="/" aria-label="Giovanni Coutinho home"
+        ><span class="monogram" aria-hidden="true">g<span>·</span>c</span
+        ><span>GIOVANNI COUTINHO<small>PLATFORM ENGINEER</small></span></a
+      >
+      <nav aria-label="Main navigation">
+        <button id="map-toggle" disabled>
+          <span aria-hidden="true">◎</span> Star chart <kbd>M</kbd></button
+        ><a class="resume-link" href="https://resume.giovanni.dev.br"
+          >Resume <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+    </header>
+    <main>
+      <section id="intro" class="intro" aria-labelledby="intro-title">
+        <p class="intro-flight-state" id="intro-flight-state" role="status">NÓMADA <span>Preparing flight</span></p>
+        <p class="eyebrow">
+          <span class="status-dot"></span> BELO HORIZONTE, BR · REMOTE
+        </p>
+        <h1 id="intro-title">Gio. Platform <em>engineer.</em></h1>
+        <p class="intro-copy">
+          I run Kubernetes platforms and build tools for the engineers using
+          them. Fly between my projects, enter orbit, and ask about the work.
+        </p>
+        <p class="intro-experience">
+          Kubernetes · GitOps · Observability · Homelab
+        </p>
+        <button id="launch" class="primary" disabled>
+          Preparing the craft…
+        </button>
+        <small class="launch-notice">Launching sends Gio a visitor ping: IP, browser and screen details.</small>
+        <a class="text-link" href="https://resume.giovanni.dev.br"
+          >Just here for the resume? ↗</a
+        >
+        <noscript
+          ><p>
+            This flight needs JavaScript.
+            <a href="https://resume.giovanni.dev.br">Read my resume</a> or visit
+            <a href="https://bitops.com.br">BitOps</a>.
+          </p></noscript
+        >
+      </section>
+      <div id="body-labels" aria-label="Fly to a destination"></div>
+      <div class="world-caption" aria-hidden="true">
+        <span>GC—01 / THE ORRERY</span><span>NÓMADA / SURVEY CRAFT</span>
+      </div>
+      <aside id="flight-guide" hidden>
+        <span class="eyebrow">FLIGHT CONTROLS</span>
+        <p class="guide-keys">W moves forward. A / D turn. S brakes.</p>
+        <p class="guide-touch">Drag the stick to steer. Pull it back to brake. Hold BOOST to burn.</p>
+        <small
+          >Choose a destination for an assisted flight.<br />Enter orbit for
+          notes and COMM. Survey shows the whole system.</small
+        ><button id="guide-close" aria-label="Dismiss flight guide">×</button>
+      </aside>
+      <div id="orbit-reticle" aria-hidden="true">
+        <span>ORBIT HOLD</span><i></i><span id="orbit-bearing">000°</span>
+      </div>
+      <div id="canopy-hud" hidden>
+        <div>
+          <span class="eyebrow">SPEED</span><strong id="hud-speed">0.0</strong>
+        </div>
+        <div>
+          <span class="eyebrow">HEADING</span
+          ><strong id="hud-heading">0°</strong>
+        </div>
+        <div>
+          <span class="eyebrow">DESTINATION</span
+          ><strong id="hud-target">—</strong>
+        </div>
+        <div>
+          <span class="eyebrow">BUOYS</span
+          ><strong id="collect-count">00</strong>
+        </div>
+      </div>
+      <!-- Readings you fly past rather than dock for. Non-modal, and it steps
+           aside for anything the visitor actually opened. -->
+      <aside id="nearby" hidden aria-live="polite">
+        <p class="eyebrow">NEARBY SIGNAL</p>
+        <strong id="nearby-name">—</strong>
+        <dl id="nearby-rows"></dl>
+        <p id="nearby-freshness" class="live-freshness"></p>
+        <div id="nearby-sources" hidden role="group" aria-label="Choose a nearby signal"></div>
+      </aside>
+      <div id="approach" hidden>
+        <span id="approach-name"></span
+        ><button id="dock-button">Enter orbit <kbd>E</kbd></button>
+      </div>
+      <button id="relay-toggle" type="button" hidden aria-expanded="false" aria-controls="relay-panel">Ping relay</button>
+      <form id="relay-panel" hidden>
+        <button id="relay-close" type="button" aria-label="Close relay">×</button>
+        <p class="eyebrow" id="relay-kicker">RELAY</p>
+        <strong id="relay-title">Heliograph</strong>
+        <p id="relay-copy">Optional name and note. Transmit a ping.</p>
+        <label class="sr-only" for="relay-who">Name (optional)</label>
+        <input
+          id="relay-who"
+          name="who"
+          maxlength="40"
+          autocomplete="nickname"
+          placeholder="Name (optional)"
+        />
+        <label class="sr-only" for="relay-note">Note (optional)</label>
+        <input
+          id="relay-note"
+          name="note"
+          maxlength="280"
+          placeholder="A short ping (optional)"
+        />
+        <button type="submit" id="relay-send">Transmit</button>
+        <span id="relay-status" role="status"></span>
+        <p class="relay-disclosure">
+          A ping carries your note plus your connection details: address,
+          browser, screen and how long you have been flying.
+        </p>
+      </form>
+      <aside id="station" hidden>
+        <article id="station-body"></article>
+        <div class="station-footer">
+          <button
+            id="station-notes"
+            aria-expanded="false"
+            aria-controls="orbit-notes"
+          >
+            Read notes</button
+          ><button
+            id="comm-toggle"
+            aria-controls="comm-hud"
+            aria-expanded="false"
+          >
+            COMM <span>Ask about this orbit</span></button
+          ><button id="station-undock" class="primary">
+            Leave orbit <kbd>Esc</kbd></button
+          ><button id="station-next">Next →</button>
+        </div>
+      </aside>
+      <section id="orbit-notes" hidden aria-labelledby="orbit-notes-title">
+        <header class="notes-header">
+          <div>
+            <span class="eyebrow">COCKPIT / FIELD NOTES</span>
+            <h2 id="orbit-notes-title"></h2>
+          </div>
+          <button id="notes-close" type="button" aria-label="Close notes">
+            ×
+          </button>
+        </header>
+        <div id="orbit-notes-content" tabindex="0"></div>
+        <footer class="notes-footer">
+          <span>ORBIT HOLD</span><span id="notes-bearing">000°</span>
+        </footer>
+      </section>
+      <dialog id="comm-hud" aria-labelledby="comm-title">
+        <header class="comm-header">
+          <div>
+            <span class="eyebrow">COMM / ORBIT ASSISTANT</span>
+            <h2 id="comm-title">Ask about this orbit</h2>
+          </div>
+          <button
+            type="button"
+            id="comm-close"
+            data-close
+            aria-label="Close COMM"
+          >
+            ×
+          </button>
+        </header>
+        <div class="comm-scope">
+          <span class="status-dot"></span
+          ><span id="comm-scope">No orbit selected</span
+          ><button id="comm-clear" type="button">Clear chat</button>
+        </div>
+        <div class="comm-models">
+          <button
+            id="model-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="model-picker"
+          >
+            <span>MODEL</span><strong id="model-name">Service default</strong
+            ><span aria-hidden="true">⌄</span>
+          </button>
+          <div id="model-picker" hidden>
+            <label class="visually-hidden" for="model-search"
+              >Search available models</label
+            >
+            <div class="model-search-row">
+              <input
+                id="model-search"
+                type="search"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="true"
+                aria-controls="model-options"
+                placeholder="Search models…"
+                autocomplete="off"
+              /><button
+                id="model-dismiss"
+                type="button"
+                aria-label="Close model selector"
+              >
+                ×
+              </button>
+            </div>
+            <div
+              id="model-options"
+              role="listbox"
+              aria-label="Available models"
+            ></div>
+            <p id="model-status" role="status"></p>
+            <button id="model-retry" type="button" hidden>
+              Retry model list
+            </button>
+          </div>
+        </div>
+        <div
+          id="comm-log"
+          role="log"
+          aria-label="Conversation"
+          aria-live="polite"
+          tabindex="0"
+        ></div>
+        <button id="comm-latest" type="button" hidden>Latest message ↓</button>
+        <form id="comm-form">
+          <label class="visually-hidden" for="comm-input"
+            >Message about this orbit</label
+          >
+          <textarea
+            id="comm-input"
+            name="prompt"
+            maxlength="800"
+            rows="2"
+            autocomplete="off"
+            placeholder="Ask about this orbit…"
+          ></textarea>
+          <div class="comm-composer-footer">
+            <span>Enter to send · Shift + Enter for a new line</span
+            ><button type="button" id="comm-stop" hidden>■ Stop</button
+            ><button type="submit" id="comm-send" disabled>Send ↑</button>
+          </div>
+        </form>
+        <p id="comm-status" role="status">
+          Answers use the notes for this orbit.
+        </p>
+      </dialog>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="fallback" hidden>
+        <p class="eyebrow">CHART MODE</p>
+        <h2>The stories are still here.</h2>
+        <p id="fallback-reason">
+          Explore the star chart without 3D, or head straight to my resume.
+        </p>
+        <button id="fallback-chart" class="primary">Explore the chart</button
+        ><a href="https://resume.giovanni.dev.br">Read my resume ↗</a>
+      </div>
+    </main>
+    <footer class="cockpit">
+      <div class="craft-status">
+        <span class="craft-icon" aria-hidden="true">⋔</span>
+        <div>
+          <span class="eyebrow">VESSEL / NÓMADA</span
+          ><strong id="flight-status" role="status">Standing by</strong
+          ><span class="subline" id="flight-detail"
+            >W forward · A / D turn · S brake</span
+          >
+        </div>
+      </div>
+      <div class="survey">
+        <span class="eyebrow">FIELD NOTES</span
+        ><strong
+          ><span id="visited-count">00</span
+          ><span class="muted">
+            / <span id="visited-total">15</span></span
+          ></strong
+        >
+        <div id="visit-marks" aria-hidden="true"></div>
+      </div>
+      <button
+        id="bitcoin-toggle"
+        class="bitcoin-summary"
+        aria-label="Open Bitcoin telemetry"
+      >
+        <span class="eyebrow"
+          ><span class="status-dot" id="bitcoin-led"></span> BITCOIN /
+          <span id="bitcoin-state">CONNECTING</span></span
+        ><strong id="block">—</strong
+        ><span class="subline"
+          >BLOCK HEIGHT <span aria-hidden="true">↗</span></span
+        ><span class="btc-extra"
+          ><span id="btc-price">—</span
+          ><span id="btc-since" title="Time since the last block">—</span></span
+        >
+      </button>
+      <div class="cockpit-actions">
+        <button id="instruments-toggle" aria-label="Open cockpit instruments">
+          ⌁ <span>Instruments</span><span id="unlock-count">0/5</span>
+        </button>
+        <button
+          id="camera-toggle"
+          aria-pressed="false"
+          aria-label="Cycle cameras"
+        >
+          ◎ <span id="camera-label">Cycle cam</span> <kbd>C</kbd>
+        </button>
+        <button
+          id="overhead-toggle"
+          aria-pressed="false"
+          aria-label="Plan camera from above"
+        >
+          ⊞ <span id="overhead-label">Plan cam</span> <kbd>V</kbd>
+        </button>
+        <button id="help-toggle" aria-label="Flight controls">
+          ? <span>Controls</span></button
+        ><button id="quality-toggle" aria-pressed="false">
+          ◈ <span id="quality-label">Low graphics</span>
+        </button>
+      </div>
+    </footer>
+    <button id="console-toggle" type="button" hidden aria-pressed="false">
+      Console <kbd>I</kbd>
+    </button>
+    <div id="touch-controls" hidden aria-label="Touch flight controls">
+      <button id="touch-boost" aria-label="Boost">BOOST</button>
+      <div id="joystick" role="group" aria-label="Drag to steer">
+        <span id="joystick-knob"></span>
+      </div>
+    </div>
+    <dialog id="dossier" aria-labelledby="dossier-title">
+      <button class="close" data-close aria-label="Close notes">×</button>
+      <article id="dossier-body"></article>
+      <div class="dossier-footer">
+        <button id="undock" class="primary">
+          Continue exploring <span aria-hidden="true">↗</span></button
+        ><button id="next-body">Next destination →</button>
+      </div>
+    </dialog>
+    <dialog id="chart" aria-labelledby="chart-title">
+      <button class="close" data-close aria-label="Close star chart">×</button>
+      <p class="eyebrow">NAVIGATION / GC—01</p>
+      <h2 id="chart-title">Choose your next orbit.</h2>
+      <p class="dialog-intro">
+        Choose a planet, then explore its moons. Select a destination to enter
+        orbit.
+      </p>
+      <div id="chart-filters" aria-label="Focus a planetary system"></div>
+      <p id="chart-focus-title" class="eyebrow">System overview</p>
+      <div class="chart-layout">
+        <svg
+          id="chart-svg"
+          viewBox="0 0 440 440"
+          role="img"
+          aria-label="Orrery schematic showing planets, their moons, and your craft"
+        ></svg>
+        <div id="chart-destinations"></div>
+      </div>
+      <p class="chart-note">SCHEMATIC · PLANETS AND MOONS · HOPS IN SECONDS</p>
+      <button id="survey-jump" class="primary">Fly to the survey array</button>
+    </dialog>
+    <dialog id="telemetry" aria-labelledby="telemetry-title">
+      <button class="close" data-close aria-label="Close Bitcoin telemetry">
+        ×
+      </button>
+      <p class="eyebrow">BITCOIN / HOMELAB DOWNLINK</p>
+      <h2 id="telemetry-title">Bitcoin, from my homelab.</h2>
+      <p class="dialog-intro">
+        Reported by the mempool service in my homelab. Refreshes every 30
+        seconds while this page is visible.
+      </p>
+      <p id="bitcoin-freshness" role="status">Connecting to the beacon…</p>
+      <dl class="telemetry-grid">
+        <div>
+          <dt>Block height</dt>
+          <dd id="telemetry-block">—</dd>
+        </div>
+        <div>
+          <dt>Pending transactions</dt>
+          <dd id="mempool">—</dd>
+        </div>
+        <div>
+          <dt>Priority fee · sat/vB</dt>
+          <dd id="fee">—</dd>
+        </div>
+      </dl>
+      <div id="signal-detail" hidden>
+        <p class="eyebrow">SIGNAL DECODER / UNLOCKED</p>
+        <dl class="telemetry-grid">
+          <div>
+            <dt>~30 min · sat/vB</dt>
+            <dd id="fee-half">—</dd>
+          </div>
+          <div>
+            <dt>~60 min · sat/vB</dt>
+            <dd id="fee-hour">—</dd>
+          </div>
+          <div>
+            <dt>Backlog · vMB</dt>
+            <dd id="backlog">—</dd>
+          </div>
+        </dl>
+        <p class="fine-print">
+          Fee targets are estimates reported by mempool. Confirmation times are
+          not guaranteed.
+        </p>
+      </div>
+      <p id="signal-locked" class="instrument-note">
+        Visit Observability + Bitcoin to decode more of the signal.
+      </p>
+      <div class="tip-row">
+        <button id="tip-button">Leave a tip ↗</button
+        ><span id="tip-status">Checking payment destination…</span>
+      </div>
+    </dialog>
+    <dialog id="instruments" aria-labelledby="instruments-title">
+      <button class="close" data-close aria-label="Close instruments">×</button>
+      <p class="eyebrow">COCKPIT / DISCOVERY</p>
+      <h2 id="instruments-title">Cockpit instruments.</h2>
+      <p class="dialog-intro">
+        Visit related destinations to unlock instruments. Collect buoys along
+        the way.
+      </p>
+      <div class="instrument-card">
+        <span id="gitops-badge" class="eyebrow">LOCKED / 01</span>
+        <h3>GitOps lens</h3>
+        <p>
+          Production EKS and a personal Talos cluster share an operating idea:
+          changes reviewed in Git.
+        </p>
+        <button id="gitops-toggle" disabled aria-pressed="false">
+          Visit Platform + Homelab
+        </button>
+      </div>
+      <div class="instrument-card">
+        <span id="signal-badge" class="eyebrow">LOCKED / 02</span>
+        <h3>Signal decoder</h3>
+        <p>
+          Connect observability practice to a live system. Inspect fee tiers and
+          the transaction backlog.
+        </p>
+        <button id="signal-toggle" disabled>
+          Visit Observability + Bitcoin
+        </button>
+      </div>
+      <div class="instrument-card">
+        <span id="surveyor-badge" class="eyebrow">LOCKED / 03</span>
+        <h3>Surveyor</h3>
+        <p>Enter the survey array’s orbit to see the full system.</p>
+      </div>
+      <div class="instrument-card">
+        <span id="hopper-badge" class="eyebrow">LOCKED / 04</span>
+        <h3>Moon hopper</h3>
+        <p>
+          Log three satellites: Cilium, Argo, MCP tools, or the homelab moons.
+        </p>
+      </div>
+      <div class="instrument-card">
+        <span id="collector-badge" class="eyebrow">LOCKED / 05</span>
+        <h3>Collector</h3>
+        <p>
+          Recover every signal buoy. Each one carries a short note about the
+          work.
+        </p>
+      </div>
+      <p class="fine-print">
+        Field notes are saved in this browser when storage is available.
+      </p>
+    </dialog>
+    <dialog id="help" aria-labelledby="help-title">
+      <button class="close" data-close aria-label="Close flight controls">
+        ×
+      </button>
+      <p class="eyebrow">NÓMADA / PILOT’S NOTES</p>
+      <h2 id="help-title">Flying Nómada.</h2>
+      <p class="dialog-intro">
+        Fly manually or select a destination for an assisted flight.
+      </p>
+      <dl class="controls-list">
+        <div>
+          <dt>W / up arrow</dt>
+          <dd>Thrust forward along the ship’s nose</dd>
+        </div>
+        <div>
+          <dt>A / D</dt>
+          <dd>Yaw left and right</dd>
+        </div>
+        <div>
+          <dt>S / down arrow</dt>
+          <dd>Brake</dd>
+        </div>
+        <div>
+          <dt>Space</dt>
+          <dd>Boost</dd>
+        </div>
+        <div>
+          <dt>Click or tap a destination</dt>
+          <dd>Assisted flight + automatic orbit</dd>
+        </div>
+        <div>
+          <dt>E</dt>
+          <dd>Enter orbit around the nearest body.</dd>
+        </div>
+        <div>
+          <dt>C</dt>
+          <dd>Cycle cameras: plan, chase, cockpit</dd>
+        </div>
+        <div>
+          <dt>V</dt>
+          <dd>Plan camera from above</dd>
+        </div>
+        <div>
+          <dt>I</dt>
+          <dd>Show or hide the console while flying</dd>
+        </div>
+        <div>
+          <dt>Survey array</dt>
+          <dd>Enter orbit around the inner satellite for the full view</dd>
+        </div>
+        <div>
+          <dt>M / Esc</dt>
+          <dd>Star chart / leave orbit or cancel flight</dd>
+        </div>
+        <div>
+          <dt>On a phone</dt>
+          <dd>Drag the thumb control to steer; tap Ⅱ to brake</dd>
+        </div>
+      </dl>
+      <p class="fine-print">
+        Manual steering cancels assisted flight. Reduced motion follows your
+        device preference.
+      </p>
+      <button id="chart-mode">Switch to chart mode</button
+      ><a class="text-link" href="https://resume.giovanni.dev.br"
+        >Read the resume ↗</a
+      >
+    </dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
