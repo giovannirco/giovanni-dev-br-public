@@ -96,6 +96,17 @@ export const WATCH_QUERIES = {
   certDays: "min(min by (monitor_id) (monitor_cert_days_remaining > 0))",
 };
 
+// Each gauge describes the same full node. max collapses duplicate collectors
+// and discards every label before the reading reaches the application.
+export const BITCOIN_QUERIES = {
+  peers: "max(bitcoin_peers)",
+  chainBytes: "max(bitcoin_size_on_disk)",
+  mempoolTransactions: "max(bitcoin_mempool_size)",
+  mempoolBytes: "max(bitcoin_mempool_bytes)",
+  uptimeSeconds: "max(bitcoin_uptime)",
+  verification: "max(bitcoin_verification_progress)",
+};
+
 export const NODE_QUERIES = {
   inventory: "kube_node_info",
   ready: 'kube_node_status_condition{condition="Ready"} == 1',
@@ -348,5 +359,23 @@ export function createInsight({
     });
   }
 
-  return { site, lab, scout, nodes, watch, ready: () => Boolean(mimirUrl) };
+  async function bitcoin() {
+    return cached("bitcoin", async () => {
+      const raw = await scalars(BITCOIN_QUERIES);
+      // Zero peers or transactions is real. Missing, negative and impossible
+      // progress readings are unknown, never evidence of an idle/synced node.
+      const count = (n) => n !== null && n >= 0 ? round(n) : null;
+      return {
+        peers: count(raw.peers),
+        chainBytes: count(raw.chainBytes),
+        mempoolTransactions: count(raw.mempoolTransactions),
+        mempoolBytes: count(raw.mempoolBytes),
+        uptimeSeconds: count(raw.uptimeSeconds),
+        verification: raw.verification !== null && raw.verification >= 0 && raw.verification <= 1 ? raw.verification : null,
+        updatedAt: new Date(now()).toISOString(),
+      };
+    });
+  }
+
+  return { site, lab, scout, nodes, watch, bitcoin, ready: () => Boolean(mimirUrl) };
 }

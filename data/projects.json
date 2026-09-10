@@ -781,7 +781,8 @@
       "blurb": "Live block height, mempool backlog and fee estimates, read from the node in my own house.",
       "details": [
         "I run a Bitcoin full node with Fulcrum and mempool on the homelab cluster. The numbers on the instrument panel come from that node through an allowlisted read-only proxy, not from a public API.",
-        "Fee targets are estimates. Confirmation times are nobody's promise, and a zero-fee reading is a real one, so the panel shows it as such."
+        "Fee targets are estimates. Confirmation times are nobody's promise, and a zero-fee reading is a real one, so the panel shows it as such.",
+        "The orbit panel also reads the node exporter through the metrics store: peers, block files on disk, the node's mempool and uptime. Those are aggregate readings, with no connection details attached. Verification appears while it is incomplete; a missing reading stays unknown."
       ],
       "tags": [
         "Bitcoin",

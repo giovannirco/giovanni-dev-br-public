@@ -48,6 +48,7 @@ const mempool = (
 // cannot start publishing fields nobody chose: /api/v1/blocks alone is a large
 // array of full blocks, and only the tip's height and timestamp are wanted.
 const bitcoinRoutes = {
+  "/api/bitcoin/node": { insight: "bitcoin" },
   "/api/bitcoin/tip": { upstream: "/api/v1/blocks/tip/height" },
   "/api/bitcoin/hash": { upstream: "/api/v1/blocks/tip/hash" },
   "/api/bitcoin/fees": { upstream: "/api/v1/fees/recommended" },
@@ -514,6 +515,14 @@ export function createApp({
         return;
       }
       if (path in bitcoinRoutes) {
+        if (bitcoinRoutes[path].insight) {
+          try {
+            json(res, 200, await insight[bitcoinRoutes[path].insight]());
+          } catch (err) {
+            json(res, err.status === 503 ? 503 : 502, { error: "Readings unavailable." });
+          }
+          return;
+        }
         if (!mempoolBase) {
           json(res, 503, { error: "Readings unavailable." });
           return;

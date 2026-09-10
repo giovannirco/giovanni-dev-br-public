@@ -1,4 +1,35 @@
 import { test, expect } from "@playwright/test";
+
+test("Bitcoin node readings survive a missing block feed and distinguish unknown verification", async ({ page }) => {
+  await mockAPI(page);
+  await page.route("**/api/bitcoin/node", route => route.fulfill({ json: {
+    peers: 0, chainBytes: 874840231616, mempoolTransactions: 0,
+    mempoolBytes: 0, uptimeSeconds: 156257, verification: null,
+  } }));
+  await page.route("**/api/bitcoin/block", route => route.fulfill({ status: 503, json: { error: "Unavailable" } }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await visit(page, "bitcoin");
+  const live = page.locator(".orbit-live");
+  await expect(live).toContainText("874.8 GB");
+  await expect(live).toContainText("0 txs · 0.0 MB");
+  await expect(live).toContainText("1d 19h");
+  await expect(live).toContainText("Unknown");
+  await expect(live).toContainText("$79,546");
+  const panel = await live.boundingBox();
+  const body = await page.locator("#station-body").boundingBox();
+  expect(panel.y + panel.height).toBeLessThanOrEqual(body.y + body.height + 1);
+});
+
+test("Bitcoin block readings survive a missing node exporter", async ({ page }) => {
+  await mockAPI(page);
+  await page.route("**/api/bitcoin/node", route => route.fulfill({ status: 503, json: { error: "Unavailable" } }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await visit(page, "bitcoin");
+  await expect(page.locator(".orbit-live")).toContainText("900,123");
+  await expect(page.locator(".orbit-live")).toContainText("Not reporting");
+});
 const bodies = [
   "resume",
   "platform",
