@@ -268,6 +268,22 @@ const LIVE_FEEDS = {
             .join("")}</ul>`
         : "",
   },
+  // Aggregates only, by construction: the feed behind this cannot return a
+  // per-monitor row, so there is nothing here to accidentally render.
+  watchtower: {
+    url: "/api/insight/watch",
+    rows: (d) =>
+      finite(d.monitors)
+        ? [
+            ["Checks passing", finite(d.up) ? `${d.up}/${d.monitors}` : "—"],
+            ["Failing", number(d.down)],
+            ["Uptime · 30d (median)", finite(d.uptime30d) ? `${(d.uptime30d * 100).toFixed(1)}%` : "—"],
+            ["Response (median)", finite(d.responseMs) ? `${Math.round(d.responseMs)}ms` : "—"],
+            ["Soonest cert expiry", finite(d.certDays) ? `${Math.round(d.certDays)} days` : "—"],
+          ]
+        : null,
+    unavailable: "The watch is not reporting right now.",
+  },
   "lab-grafana": {
     url: "/api/insight/lab",
     rows: (d) => [

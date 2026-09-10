@@ -67,6 +67,35 @@ export const LAB_QUERIES = {
   namespaces: 'count(max by (namespace) (kube_namespace_status_phase{phase="Active"}) == 1)',
 };
 
+// Uptime Kuma watches a few dozen services. Every series it exports carries
+// monitor_name, monitor_url and monitor_hostname, and those name and address
+// internal services — some of them by in-cluster DNS name. None of that is
+// summarizable into a portfolio reading, so every query here aggregates the
+// whole set down to one number and no query selects, groups by or returns a
+// per-monitor series. What a monitor is called never enters this file.
+//
+// The median rather than the mean for both ratios: a handful of monitors point
+// at things that are switched off on purpose and sit at zero, and a mean lets
+// those decide the headline figure. The median describes the typical service,
+// which is what the panel claims, and the up-versus-total count next to it
+// keeps the dead ones visible rather than hidden.
+//
+// Every reading collapses duplicates by monitor_id first. Two collectors can
+// scrape the same Uptime Kuma at once — a second scrape job briefly existed
+// while this panel was being built, and the naive count read 176 monitors for
+// a set of 88. monitor_id is an integer with no meaning outside the metrics
+// store, so grouping by it deduplicates without naming anything.
+export const WATCH_QUERIES = {
+  monitors: "count(count by (monitor_id) (monitor_status))",
+  up: "count(count by (monitor_id) (monitor_status == 1))",
+  down: "count(count by (monitor_id) (monitor_status == 0))",
+  uptime30d: 'quantile(0.5, max by (monitor_id) (monitor_uptime_ratio{window="30d"}))',
+  response: 'quantile(0.5, max by (monitor_id) (monitor_response_time_seconds{window="1d"}))',
+  // Expired and not-yet-issued certificates report zero or less; excluding
+  // them keeps this reading "soonest real expiry" rather than a constant zero.
+  certDays: "min(min by (monitor_id) (monitor_cert_days_remaining > 0))",
+};
+
 export const NODE_QUERIES = {
   inventory: "kube_node_info",
   ready: 'kube_node_status_condition{condition="Ready"} == 1',
@@ -298,5 +327,26 @@ export function createInsight({
     });
   }
 
-  return { site, lab, scout, nodes, ready: () => Boolean(mimirUrl) };
+  // Counts and rounded aggregates only. See WATCH_QUERIES: the monitor names
+  // and addresses stay in the metrics store and never reach this object.
+  async function watch() {
+    return cached("watch", async () => {
+      const raw = await scalars(WATCH_QUERIES);
+      const monitors = round(raw.monitors);
+      const up = round(raw.up);
+      return {
+        monitors,
+        up,
+        down: round(raw.down),
+        // A ratio is only meaningful against a known total.
+        uptime30d:
+          raw.uptime30d === null ? null : round(Math.min(Math.max(raw.uptime30d, 0), 1), 4),
+        responseMs: raw.response === null ? null : round(raw.response * 1000),
+        certDays: round(raw.certDays),
+        updatedAt: new Date(now()).toISOString(),
+      };
+    });
+  }
+
+  return { site, lab, scout, nodes, watch, ready: () => Boolean(mimirUrl) };
 }

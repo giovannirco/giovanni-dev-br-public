@@ -30,14 +30,14 @@ The server listens on port 8080. Configuration comes from process environment va
 | `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL` | OpenAI-compatible chat endpoint, credential and default model |
 | `CHAT_MODELS` | Comma-separated public model allowlist |
 | `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION`, `WAHA_BEACON_CHAT_ID` | Server-side notification transport and destination |
-| `MIMIR_URL`, `MIMIR_TENANT` | Read-only site and cluster metrics |
+| `MIMIR_URL`, `MIMIR_TENANT` | Read-only site, cluster and uptime-monitor metrics |
 | `PUBLIC_NODE_ALIASES` | `real=shown` pairs for the node panel; unmapped machines read as `node-01` |
 | `JOB_SCOUT_URL` | Counts-only project activity feed |
 | `LIGHTNING_ADDRESS`, `BTCPAY_URL` | Optional public payment destination |
 | `TRUSTED_PROXY_CIDRS`, `TRUSTED_EDGE_CIDRS` | Explicit forwarding-header trust boundaries |
 | `LOG_LEVEL`, `APP_VERSION` | Structured logging level and release identifier |
 
-Deployment addresses belong in private deployment configuration. Credentials belong in a secret manager or runtime Secret references, never committed values. Integrations without configuration are unavailable; the portfolio remains playable. Payment destinations, selected model IDs and configured public metric readings are intentionally visible to visitors. Cluster readings never carry a real machine name: the node panel shows `PUBLIC_NODE_ALIASES` labels, or positional ones when unset.
+Deployment addresses belong in private deployment configuration. Credentials belong in a secret manager or runtime Secret references, never committed values. Integrations without configuration are unavailable; the portfolio remains playable. Payment destinations, selected model IDs and configured public metric readings are intentionally visible to visitors. Cluster readings never carry a real machine name: the node panel shows `PUBLIC_NODE_ALIASES` labels, or positional ones when unset. The uptime panel is aggregate-only for the same reason: its upstream series label every reading with the monitor's name, URL and hostname, so each query collapses the whole set to a single number and none may group by, select or return a per-monitor series. A test asserts that of every query rather than trusting the author of the next one.
 
 `test/disclosure.test.mjs` is the boundary this repository is built around: the code is public, the addresses behind it are not. It drives every public route with internal-looking configuration and failing upstreams, and fails if a hostname, port, tenant, credential, machine name or upstream error message reaches a response. Add an integration and add it there. Server-side structured logs do record upstream addresses and are meant for a private log pipeline, not a public one.
 

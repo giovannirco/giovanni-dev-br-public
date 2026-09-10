@@ -90,6 +90,7 @@ const PUBLIC_PATHS = [
   "/api/insight/lab",
   "/api/insight/nodes",
   "/api/insight/scout",
+  "/api/insight/watch",
   "/api/insight/nowhere",
   "/api/bitcoin/tip",
   "/api/bitcoin/fees",
@@ -118,7 +119,7 @@ test("no public response discloses where a reading comes from", async () => {
 });
 
 test("a failing upstream reports that it failed, not who it is", async () => {
-  for (const path of ["/api/insight/site", "/api/insight/nodes", "/api/bitcoin/tip"]) {
+  for (const path of ["/api/insight/site", "/api/insight/nodes", "/api/insight/watch", "/api/bitcoin/tip"]) {
     const response = await fetch(`${base}${path}`);
     assert.ok(response.status >= 500, `${path} should surface the failure`);
     const body = await response.json();
