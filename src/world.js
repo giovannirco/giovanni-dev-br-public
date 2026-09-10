@@ -1100,9 +1100,7 @@ export function createWorld(canvas, catalog, callbacks) {
     last = now;
     if (document.hidden) return;
     if (active && !paused) {
-      const arrived = stepFlight(
-        state,
-        {
+      const input = {
           yaw: steerYaw({
             left: keys.has("KeyA") || keys.has("ArrowLeft"),
             right: keys.has("KeyD") || keys.has("ArrowRight"),
@@ -1121,7 +1119,11 @@ export function createWorld(canvas, catalog, callbacks) {
             keys.has("KeyS") ||
             keys.has("ArrowDown") ||
             stick.z > 0.45,
-        },
+        };
+      callbacks.onFlightInput?.(input);
+      const arrived = stepFlight(
+        state,
+        input,
         catalog.bodies,
         reduced && state.docked ? 0 : dt,
       );

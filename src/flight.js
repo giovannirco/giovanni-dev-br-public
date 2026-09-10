@@ -380,6 +380,17 @@ export function nearbyEmitters(state, bodies, emitters, range = Infinity, limit 
   return found.sort((a, b) => a.distance - b.distance).slice(0, limit);
 }
 
+// Positive bearings are to starboard; zero follows the ship's nose (+z before
+// yaw). Use the same world positions and surface distance as the scanner.
+export function emitterBearing(state, body, bodies) {
+  const p = positionOf(body, bodies);
+  const relative = Math.atan2(p.x - state.x, p.z - state.z) - state.heading;
+  return {
+    bearing: Math.atan2(Math.sin(relative), Math.cos(relative)),
+    distance: Math.max(0, Math.hypot(p.x - state.x, p.z - state.z) - body.radius),
+  };
+}
+
 export function scannerChoice(state, nearby, now, { ENTER, EXIT, DWELL }) {
   const held = state.pinned || state.source;
   const holding = nearby.some(n => n.id === held && n.distance <= EXIT);

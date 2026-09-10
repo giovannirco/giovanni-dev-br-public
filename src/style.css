@@ -2034,14 +2034,102 @@ dialog p {
   z-index: 4;
   width: 232px;
   padding: 10px 12px 9px;
-  background: #0d1c1aef;
-  border: 1px solid #a5d9be2e;
+  background: linear-gradient(120deg, #0b151af2, #080f14e8);
+  border: 1px solid #b2d9d51a;
+  border-left: 2px solid var(--orbit-color, #a5d9be);
   border-radius: 4px;
+  box-shadow: -5px 0 18px -10px var(--orbit-color, #a5d9be), 0 8px 28px #0003;
   pointer-events: none;
 }
-#nearby[data-open="true"] {
+#nearby:not([hidden]) {
   pointer-events: auto;
 }
+#nearby-toggle {
+  float: right;
+  padding: 3px 5px;
+  font: 9px var(--mono);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid #b2d9d530;
+  border-radius: 3px;
+}
+#nearby-bearing {
+  display: none;
+  width: 172px;
+  color: var(--orbit-color, #a5d9be);
+}
+#nearby-bearing .range-ring,
+#nearby-bearing .bearing-axis {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.7;
+  opacity: 0.3;
+}
+#nearby-bearing .bearing-axis { opacity: 0.13; }
+#nearby-bearing .bearing-nose,
+#nearby-blips circle { fill: currentColor; }
+#nearby-blips .contact { opacity: 0.4; }
+#nearby-bearing text { fill: currentColor; font: 9px var(--mono); letter-spacing: 0.12em; }
+.bearing-sweep { transform-origin: 90px 90px; }
+.bearing-sweep path { stroke: currentColor; stroke-width: 0.8; opacity: 0.35; }
+@media (min-width: 761px) {
+  #nearby[data-state="locked"] #nearby-bearing {
+    display: block;
+    float: right;
+    margin: 10px 0 0 12px;
+  }
+  #nearby[data-state="locked"] #nearby-rows { flex-direction: column; }
+}
+#nearby[data-state="locked"] {
+  top: 50%;
+  right: auto;
+  left: 22px;
+  width: 400px;
+  max-height: calc(100svh - 200px);
+  overflow: auto;
+  transform: translateY(-50%);
+  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, #0c1c22ed, #060e15e8);
+  box-shadow: 0 12px 44px #0005;
+  color: var(--orbit-color, #a5d9be);
+  isolation: isolate;
+}
+#nearby[data-state="locked"]::before,
+#nearby[data-state="locked"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+#nearby[data-state="locked"]::before {
+  opacity: 0.45;
+  background:
+    linear-gradient(currentColor, currentColor) left top / 18px 1px,
+    linear-gradient(currentColor, currentColor) left top / 1px 18px,
+    linear-gradient(currentColor, currentColor) right top / 18px 1px,
+    linear-gradient(currentColor, currentColor) right top / 1px 18px,
+    linear-gradient(currentColor, currentColor) left bottom / 18px 1px,
+    linear-gradient(currentColor, currentColor) left bottom / 1px 18px,
+    linear-gradient(currentColor, currentColor) right bottom / 18px 1px,
+    linear-gradient(currentColor, currentColor) right bottom / 1px 18px;
+  background-repeat: no-repeat;
+}
+#nearby[data-state="locked"]::after {
+  background: repeating-linear-gradient(0deg, transparent 0 3px, #bddedb06 3px 4px);
+}
+#nearby[data-state="locked"] #nearby-name { font-size: 16px; margin: 12px 0; }
+#nearby[data-state="locked"] #nearby-rows { gap: 12px; }
+#nearby[data-state="locked"] #nearby-sources { clear: both; padding-top: 10px; }
+#nearby.stale #nearby-freshness { color: #efbc71; }
+#nearby.stale #nearby-rows { opacity: 0.6; }
+@keyframes bearing-sweep { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  #nearby[data-state="locked"] .bearing-sweep { animation: bearing-sweep 9s linear infinite; }
+}
+#nearby.stale .bearing-sweep { animation: none; opacity: 0.2; }
 #nearby .eyebrow {
   color: #a5d9be95;
 }
@@ -2057,7 +2145,7 @@ dialog p {
   gap: 6px 18px;
   margin: 8px 0 0;
 }
-#nearby div {
+#nearby-rows > div {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -2124,8 +2212,27 @@ body.survey-view #nearby {
     font-size: 11px;
   }
   /* Two readings is all a phone has room for beside the scene. */
-  #nearby div:nth-of-type(n + 3) {
+  #nearby[data-state="contact"] #nearby-rows > div:nth-of-type(n + 3) {
     display: none;
+  }
+  #nearby[data-state="locked"] {
+    top: 84px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(50svh - 96px);
+    transform: none;
+  }
+  #nearby[data-state="locked"] dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #nearby[data-state="locked"] #nearby-toggle {
+    min-height: 32px;
+    padding: 6px 9px;
+  }
+  #nearby[data-state="locked"] #nearby-sources button {
+    min-height: 32px;
   }
 }
 

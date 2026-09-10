@@ -3,7 +3,7 @@ import "./orbit.css";
 import { createComm } from "./comm.js";
 import { renderChart } from "./chart.js";
 import catalog from "../data/projects.json";
-import { achievements, DOCK_MARGIN, nearbyEmitters, scannerChoice, positionOf, unlocks } from "./flight.js";
+import { achievements, DOCK_MARGIN, nearbyEmitters, scannerChoice, positionOf, unlocks, emitterBearing } from "./flight.js";
 import { bitcoinNodeRows } from "./bitcoin-reading.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -150,6 +150,7 @@ function openDialog(id) {
   } else activeDialog.showModal();
   if (id === "#chart") drawChart();
   if (id === "#telemetry") updateFreshness();
+  setScannerExpanded(false);
 }
 for (const dialog of document.querySelectorAll("dialog")) {
   dialog.querySelector("[data-close]")?.addEventListener("click", closeDialog);
@@ -432,6 +433,9 @@ const SCANNER_SOURCES = {
 const scannerIds = new Set(Object.keys(SCANNER_SOURCES).filter((id) => ids.has(id)));
 
 const scanner = {
+  expanded: false,
+  maneuvering: false,
+  pose: null,
   source: null,
   pinned: null,
   candidate: null,
@@ -446,6 +450,16 @@ const scanner = {
   checked: 0,
 };
 
+function scannerVisible() {
+  return scanner.source && started && !fallback && !activeDialog &&
+    !document.body.matches(".in-orbit, .notes-open, .chart-mode, .survey-view");
+}
+
+function setScannerExpanded(expanded) {
+  scanner.expanded = Boolean(expanded && scannerVisible() && !scanner.maneuvering);
+  renderScanner();
+}
+
 function scannerName(id) {
   return catalog.bodies.find((b) => b.id === id)?.name || id;
 }
@@ -456,6 +470,7 @@ function scanNearby(state) {
   const now = Date.now();
   if (now - scanner.checked < 200) return;
   scanner.checked = now;
+  scanner.pose = { x: state.x, z: state.z, heading: state.heading };
   // In orbit the panel is the expanded view of exactly this data. Scanning
   // alongside it would be a second reader of the same feed for no one.
   if (state.docked) {
@@ -474,6 +489,7 @@ function setScannerSource(id, pinned = false) {
   scanner.controller?.abort();
   scanner.controller = id ? new AbortController() : null;
   scanner.source = id;
+  if (!id) scanner.expanded = false;
   scanner.pinned = pinned ? id : null;
   scanner.candidate = null;
   scanner.data = null;
@@ -512,20 +528,30 @@ function renderScanner() {
   const panel = $("#nearby");
   if (!panel) return;
   const id = scanner.source;
-  if (!id || !started || fallback) {
+  if (!scannerVisible()) {
+    scanner.expanded = false;
+    panel.dataset.state = "contact";
+    $("#nearby-toggle").setAttribute("aria-expanded", "false");
     panel.hidden = true;
     return;
   }
-  const rows = scanner.data ? SCANNER_SOURCES[id]?.(scanner.data) : null;
+  panel.dataset.state = scanner.expanded ? "locked" : "contact";
+  $("#nearby-toggle").setAttribute("aria-expanded", String(scanner.expanded));
+  $("#nearby-toggle").textContent = scanner.expanded ? "Collapse · Esc" : "Expand · F";
+  const fullRows = scanner.expanded && scanner.data ? LIVE_FEEDS[id]?.rows(scanner.data) : null;
+  const rows = fullRows?.length ? fullRows.slice(0, 4) : scanner.data ? SCANNER_SOURCES[id]?.(scanner.data) : null;
   const age = scanner.received ? Math.floor((Date.now() - scanner.received) / 1000) : null;
   const stale = scanner.failed || (age !== null && age > 90);
   panel.hidden = false;
   panel.classList.toggle("stale", stale);
   panel.style.setProperty("--orbit-color", catalog.bodies.find((b) => b.id === id)?.color || "#a5d9be");
   $("#nearby-name").textContent = scannerName(id);
-  $("#nearby-rows").innerHTML = rows?.length
+  const rowHTML = rows?.length
     ? rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(String(value))}</dd></div>`).join("")
     : "";
+  // A fresh DOM tree every scanner tick also announces the same reading over
+  // and over. Update the live region only when its content actually changes.
+  if ($("#nearby-rows").innerHTML !== rowHTML) $("#nearby-rows").innerHTML = rowHTML;
   $("#nearby-freshness").textContent = scanner.failed
     ? "Signal lost."
     : age === null
@@ -548,11 +574,34 @@ function renderScanner() {
     for (const button of sources.querySelectorAll("button"))
       button.setAttribute("aria-pressed", String(button.dataset.source === id));
   }
+  renderBearing();
+}
+
+function renderBearing() {
+  if (!scanner.expanded || !scanner.pose || !matchMedia("(min-width: 761px)").matches) return;
+  const contacts = scanner.inRange.map(({ id }) => {
+    const body = catalog.bodies.find((b) => b.id === id);
+    return { id, ...emitterBearing(scanner.pose, body, catalog.bodies) };
+  });
+  $("#nearby-blips").innerHTML = contacts.map(({ id, bearing, distance }) => {
+    const radius = Math.min(distance / SCANNER.EXIT, 1) * 70;
+    return `<circle cx="${(90 + Math.sin(bearing) * radius).toFixed(1)}" cy="${(90 - Math.cos(bearing) * radius).toFixed(1)}" r="${id === scanner.source ? 4 : 2.5}" class="${id === scanner.source ? "selected" : "contact"}" />`;
+  }).join("");
+  const selected = contacts.find((c) => c.id === scanner.source);
+  if (!selected) return;
+  const degrees = Math.round(Math.abs(selected.bearing) * 180 / Math.PI);
+  const direction = degrees === 0 ? "ahead" : `${degrees} degrees ${selected.bearing < 0 ? "left" : "right"}`;
+  $("#nearby-bearing").setAttribute("aria-label", `${scannerName(scanner.source)}, range ${selected.distance.toFixed(1)}, bearing ${direction}`);
+  $("#nearby-range").textContent = `RANGE ${selected.distance.toFixed(1)}`;
 }
 
 $("#nearby-sources")?.addEventListener("click", (event) => {
   const id = event.target.closest("button")?.dataset.source;
   if (id) setScannerSource(id, true);
+});
+$("#nearby-toggle").addEventListener("click", () => setScannerExpanded(!scanner.expanded));
+$("#nearby").addEventListener("click", (event) => {
+  if (!event.target.closest("button")) setScannerExpanded(!scanner.expanded);
 });
 
 // One timer, not the render loop: refresh at most every 30 seconds, and never
@@ -996,6 +1045,15 @@ $("#gitops-toggle").addEventListener("click", () => {
 });
 $("#signal-toggle").addEventListener("click", () => openDialog("#telemetry"));
 window.addEventListener("keydown", (e) => {
+  if (e.code === "KeyF" && !e.repeat && !e.target.closest("input, textarea, select, [contenteditable]") && scannerVisible()) {
+    e.preventDefault();
+    setScannerExpanded(!scanner.expanded);
+  }
+  if (e.code === "Escape" && scanner.expanded) {
+    e.preventDefault();
+    setScannerExpanded(false);
+    return;
+  }
   if (e.code === "KeyM" && !e.repeat && !e.target.closest("input, textarea")) {
     e.preventDefault();
     if (activeDialog?.id === "chart") closeDialog();
@@ -1325,6 +1383,10 @@ try {
         el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
         el.style.visibility =
           visible && relayUnlocked(spec) ? "visible" : "hidden";
+      },
+      onFlightInput(input) {
+        scanner.maneuvering = input.thrust > 0.05 || input.brake || input.boost;
+        if (scanner.maneuvering && scanner.expanded) setScannerExpanded(false);
       },
       onState(state) {
         if (!started || fallback) return;
