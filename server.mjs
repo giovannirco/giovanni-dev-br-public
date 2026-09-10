@@ -495,7 +495,7 @@ export function createApp({
         return;
       }
       if (path.startsWith("/api/insight/")) {
-        const feed = { "/api/insight/site": insight.site, "/api/insight/lab": insight.lab, "/api/insight/scout": insight.scout, "/api/insight/nodes": insight.nodes, "/api/insight/watch": insight.watch }[path];
+        const feed = { "/api/insight/site": insight.site, "/api/insight/lab": insight.lab, "/api/insight/scout": insight.scout, "/api/insight/nodes": insight.nodes, "/api/insight/watch": insight.watch, "/api/insight/network": insight.network }[path];
         if (!feed) {
           json(res, 404, { error: "not found" });
           return;

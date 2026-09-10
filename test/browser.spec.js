@@ -1195,3 +1195,30 @@ test('holotable cannot expand before launch or without WebGL', async ({ page }) 
   await expect(page.locator('#nearby')).toBeHidden();
   await expect(page.locator('#nearby')).toHaveAttribute('data-state', 'contact');
 });
+
+test('network observations keep zero drops distinct from a silent observer', async ({ page }) => {
+  await mockAPI(page);
+  await page.route('**/api/insight/network', route => route.fulfill({ json: {
+    flowsPerSecond: 2534.2, dropsPerSecond: 0, eventsPerSecond: null,
+    enforcedEndpoints: 14, endpoints: 228,
+  } }));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await visit(page, 'envoy');
+  const live = page.locator('.orbit-live');
+  await expect(live).toContainText('2,534.2');
+  await expect(live).toContainText('14/228 endpoints');
+  await expect(live.locator('dl > div').filter({ hasText: 'Drops' })).toContainText('0.0');
+  await expect(live.locator('dl > div').filter({ hasText: 'Runtime events' })).toContainText('—');
+  const panel = await live.boundingBox();
+  const body = await page.locator('#station-body').boundingBox();
+  expect(panel.y + panel.height).toBeLessThanOrEqual(body.y + body.height + 1);
+});
+
+test('a missing network feed says it is not reporting', async ({ page }) => {
+  await mockAPI(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await visit(page, 'envoy');
+  await expect(page.locator('.orbit-live')).toContainText('The network observers are not reporting right now.');
+});

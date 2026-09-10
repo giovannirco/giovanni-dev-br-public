@@ -228,6 +228,17 @@ function meter(label, fraction, value) {
 }
 
 const LIVE_FEEDS = {
+  envoy: {
+    url: "/api/insight/network",
+    rows: (d) => [d.flowsPerSecond, d.dropsPerSecond, d.eventsPerSecond, d.enforcedEndpoints, d.endpoints].some(finite)
+      ? [
+          ["Observed flows · /s", finite(d.flowsPerSecond) ? d.flowsPerSecond.toLocaleString("en-US", { maximumFractionDigits: 1 }) : "—"],
+          ["Drops · /s", finite(d.dropsPerSecond) ? d.dropsPerSecond.toFixed(1) : "—"],
+          ["Runtime events · /s", finite(d.eventsPerSecond) ? d.eventsPerSecond.toFixed(1) : "—"],
+          ["Policy enforced", `${number(d.enforcedEndpoints)}/${number(d.endpoints)} endpoints`],
+        ] : null,
+    unavailable: "The network observers are not reporting right now.",
+  },
   bitcoin: {
     read: async (signal) => {
       const results = await Promise.allSettled([
