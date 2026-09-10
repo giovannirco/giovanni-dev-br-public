@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { once } from "node:events";
 import { createApp } from "../server.mjs";
-import { createInsight, SITE_QUERIES, LAB_QUERIES, NODE_QUERIES } from "../src/insight.mjs";
+import { createInsight, SITE_QUERIES, LAB_QUERIES, NODE_QUERIES, WATCH_QUERIES } from "../src/insight.mjs";
 
 function promResponse(value) {
   return Response.json({
@@ -316,4 +316,71 @@ test("readiness distinguishes false, unknown, absent and conflicting collector v
 test("inconsistent available memory never becomes negative usage", async () => {
   const reading = await nodeFeed({ node_memory_MemAvailable_bytes: [{ metric: { instance: "worker-01" }, value: [1, "999999999999"] }] }).nodes();
   assert.equal(reading.nodes[0].memoryUsed, null);
+});
+
+// Uptime Kuma's series carry monitor_name, monitor_url and monitor_hostname,
+// and some of those are in-cluster DNS names. Two independent guards: the
+// queries cannot ask for a per-monitor series, and the feed cannot return one.
+test("no watch query can return a per-monitor series", () => {
+  for (const [key, query] of Object.entries(WATCH_QUERIES)) {
+    // Never name a monitor, and never group by anything that could name one.
+    // monitor_id is permitted: it is an integer used to collapse duplicate
+    // collectors, and the outer aggregate removes it again.
+    assert.doesNotMatch(
+      query,
+      /monitor_name|monitor_url|monitor_hostname/,
+      `${key} selects an identifying label`,
+    );
+    for (const [, labels] of query.matchAll(/\bby\s*\(([^)]*)\)/g)) {
+      assert.deepEqual(
+        labels.split(",").map((l) => l.trim()),
+        ["monitor_id"],
+        `${key} groups by something other than monitor_id`,
+      );
+    }
+    // The outermost call has to be an aggregate, so the result is one series.
+    assert.match(query, /^(count|sum|min|max|avg|quantile)\s*\(/, `${key} is not an aggregate`);
+  }
+});
+
+test("the watch panel publishes numbers even when Mimir returns monitor labels", async () => {
+  // Exactly what the real store holds, names and in-cluster addresses included.
+  const leaky = {
+    metric: {
+      monitor_name: "Bitcoin / Fulcrum TCP",
+      monitor_hostname: "fulcrum.fulcrum.svc.cluster.local",
+      monitor_url: "http://bitcoin-rpc.bitcoin.svc.cluster.local:8332/rest/chaininfo.json",
+    },
+    value: [1, "1"],
+  };
+  const insight = createInsight({
+    mimirUrl: "http://mimir.test",
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ status: "success", data: { result: [leaky] } }), {
+        headers: { "content-type": "application/json" },
+      }),
+  });
+  const watch = await insight.watch();
+  assert.deepEqual(
+    Object.keys(watch).sort(),
+    ["certDays", "down", "monitors", "responseMs", "up", "updatedAt", "uptime30d"],
+  );
+  for (const [key, value] of Object.entries(watch)) {
+    if (key === "updatedAt") continue;
+    assert.equal(typeof value, "number", `${key} is not a number`);
+  }
+  assert.doesNotMatch(JSON.stringify(watch), /svc\.cluster\.local|Fulcrum|monitor_/);
+});
+
+test("a ratio outside 0..1 and a missing reading stay honest", async () => {
+  const reply = (value) =>
+    new Response(JSON.stringify({ status: "success", data: { result: value === null ? [] : [{ metric: {}, value: [1, String(value)] }] } }), {
+      headers: { "content-type": "application/json" },
+    });
+  const clamped = createInsight({ mimirUrl: "http://mimir.test", fetchImpl: async () => reply(1.7) });
+  assert.equal((await clamped.watch()).uptime30d, 1);
+  const empty = createInsight({ mimirUrl: "http://mimir.test", fetchImpl: async () => reply(null) });
+  const reading = await empty.watch();
+  assert.equal(reading.uptime30d, null);
+  assert.equal(reading.monitors, null);
 });

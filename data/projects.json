@@ -880,6 +880,34 @@
       ]
     },
     {
+      "id": "watchtower",
+      "name": "Uptime watch",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#7fd1b9",
+      "radius": 0.4,
+      "orbit": 11.9,
+      "angle": 3.0,
+      "sector": "Personal infrastructure",
+      "subtitle": "Whether any of it is actually up",
+      "blurb": "Uptime Kuma checks every service in the homelab and the two company stacks on a loop, so a thing that has quietly stopped working gets noticed by something other than me trying to use it.",
+      "details": [
+        "The panel reads the whole set at once: how many checks exist, how many are passing, the typical uptime over thirty days and the soonest certificate expiry. Which services are watched, and the addresses they are checked at, stay in the metrics store — the queries behind this panel aggregate every reading down to a single number and cannot return a per-service series.",
+        "The uptime figure is a median, not an average. A few checks point at things that are switched off deliberately and sit at zero forever, and an average lets those decide the headline number. The median describes the typical service; the passing-versus-total count next to it keeps the dead ones honest instead of hiding them."
+      ],
+      "tags": [
+        "Uptime Kuma",
+        "Monitoring",
+        "Prometheus",
+        "Alerting"
+      ],
+      "lesson": "A check that nobody reads is not monitoring, and an average hides the thing you needed to see.",
+      "prompts": [
+        "What monitors the homelab?",
+        "Why is the uptime a median?"
+      ]
+    },
+    {
       "id": "envoy",
       "name": "Envoy Gateway",
       "kind": "moon",
