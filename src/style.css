@@ -2088,7 +2088,48 @@ dialog p {
   max-height: calc(100svh - 200px);
   overflow: auto;
   transform: translateY(-50%);
+  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, #0c1c22ed, #060e15e8);
+  box-shadow: 0 12px 44px #0005;
+  color: var(--orbit-color, #a5d9be);
+  isolation: isolate;
 }
+#nearby[data-state="locked"]::before,
+#nearby[data-state="locked"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+#nearby[data-state="locked"]::before {
+  opacity: 0.45;
+  background:
+    linear-gradient(currentColor, currentColor) left top / 18px 1px,
+    linear-gradient(currentColor, currentColor) left top / 1px 18px,
+    linear-gradient(currentColor, currentColor) right top / 18px 1px,
+    linear-gradient(currentColor, currentColor) right top / 1px 18px,
+    linear-gradient(currentColor, currentColor) left bottom / 18px 1px,
+    linear-gradient(currentColor, currentColor) left bottom / 1px 18px,
+    linear-gradient(currentColor, currentColor) right bottom / 18px 1px,
+    linear-gradient(currentColor, currentColor) right bottom / 1px 18px;
+  background-repeat: no-repeat;
+}
+#nearby[data-state="locked"]::after {
+  background: repeating-linear-gradient(0deg, transparent 0 3px, #bddedb06 3px 4px);
+}
+#nearby[data-state="locked"] #nearby-name { font-size: 16px; margin: 12px 0; }
+#nearby[data-state="locked"] #nearby-rows { gap: 12px; }
+#nearby[data-state="locked"] #nearby-sources { clear: both; padding-top: 10px; }
+#nearby.stale #nearby-freshness { color: #efbc71; }
+#nearby.stale #nearby-rows { opacity: 0.6; }
+@keyframes bearing-sweep { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  #nearby[data-state="locked"] .bearing-sweep { animation: bearing-sweep 9s linear infinite; }
+}
+#nearby.stale .bearing-sweep { animation: none; opacity: 0.2; }
 #nearby .eyebrow {
   color: #a5d9be95;
 }
