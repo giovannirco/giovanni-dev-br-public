@@ -1043,3 +1043,155 @@ test("an answer is never labelled with a model that is not one", async ({ page }
   await page.locator("#comm-input").press("Enter");
   await expect(page.locator(".comm-message.assistant .comm-author").last()).toHaveText("ORBIT ASSISTANT · Small");
 });
+
+async function watchContact(page, offline = false) {
+  await mockAPI(page);
+  await page.route('**/api/insight/watch', route => route.fulfill({
+    status: offline ? 503 : 200,
+    json: offline ? { error: 'Unavailable' } : { monitors: 88, up: 77, down: 11, uptime30d: 0.9928, responseMs: 18, certDays: 40 },
+  }));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await visit(page, 'watchtower');
+  await page.locator('#station-undock').click();
+  await expect(page.locator('#nearby')).toBeVisible();
+  await expect(page.locator('#nearby-name')).toHaveText('Uptime watch');
+}
+
+test('holotable expansion is explicit and Escape stows it before other flight actions', async ({ page }) => {
+  await watchContact(page);
+  const panel = page.locator('#nearby');
+  await expect(panel).toHaveAttribute('data-state', 'contact');
+  await expect(page.locator('#nearby-rows')).toContainText('77/88');
+  await expect(page.locator('#nearby-rows')).toContainText('99.3%');
+  await page.keyboard.press('f');
+  await expect(panel).toHaveAttribute('data-state', 'locked');
+  await expect(page.locator('#nearby-rows > div')).toHaveCount(4);
+  await expect(page.locator('#nearby-toggle')).toHaveAttribute('aria-expanded', 'true');
+  const toast = await page.locator('#toast').textContent();
+  await page.keyboard.press('Escape');
+  await expect(panel).toHaveAttribute('data-state', 'contact');
+  await expect(page.locator('#toast')).toHaveText(toast);
+  await page.locator('#nearby-toggle').focus();
+  await page.keyboard.press('Enter');
+  await expect(panel).toHaveAttribute('data-state', 'locked');
+});
+
+test('holotable stows on thrust, brake and boost, including a held input', async ({ page }) => {
+  await watchContact(page);
+  const panel = page.locator('#nearby');
+  for (const key of ['w', 's', 'Space']) {
+    await page.keyboard.press('f');
+    await expect(panel).toHaveAttribute('data-state', 'locked');
+    await page.keyboard.down(key);
+    await expect(panel).toHaveAttribute('data-state', 'contact');
+    await page.keyboard.press('f');
+    await expect(panel).toHaveAttribute('data-state', 'contact');
+    await page.keyboard.up(key);
+    await page.waitForTimeout(100);
+  }
+});
+
+test('holotable stays collapsed outside free flight and ignores text entry', async ({ page }) => {
+  await watchContact(page);
+  const panel = page.locator('#nearby');
+  for (const mode of ['in-orbit', 'notes-open', 'chart-mode', 'survey-view']) {
+    await page.keyboard.press('f');
+    await expect(panel).toHaveAttribute('data-state', 'locked');
+    await page.evaluate(mode => document.body.classList.add(mode), mode);
+    await expect(panel).toBeHidden();
+    await expect(panel).toHaveAttribute('data-state', 'contact');
+    await page.keyboard.press('f');
+    await expect(panel).toHaveAttribute('data-state', 'contact');
+    await page.evaluate(mode => document.body.classList.remove(mode), mode);
+    await expect(panel).toBeVisible();
+  }
+  await page.locator('#map-toggle').click();
+  await expect(panel).toBeHidden();
+  await page.keyboard.press('f');
+  await expect(panel).toHaveAttribute('data-state', 'contact');
+  await page.keyboard.press('Escape');
+  await expect(panel).toBeVisible();
+  await page.evaluate(() => {
+    const input = document.createElement('input');
+    input.id = 'scanner-typing';
+    document.body.append(input);
+    input.focus();
+  });
+  await page.keyboard.press('f');
+  await expect(page.locator('#scanner-typing')).toHaveValue('f');
+  await expect(panel).toHaveAttribute('data-state', 'contact');
+});
+
+test('holotable bearing is labelled and reduced motion keeps the sweep still', async ({ page }, testInfo) => {
+  await watchContact(page);
+  await page.keyboard.press('f');
+  const ring = page.locator('#nearby-bearing');
+  if (testInfo.project.name === 'phone') {
+    await expect(ring).toBeHidden();
+  } else {
+    await expect(ring).toBeVisible();
+    await expect(ring).toHaveAttribute('aria-label', /Uptime watch, range [\d.]+, bearing /);
+    await expect(page.locator('#nearby-blips .selected')).toHaveCount(1);
+    await expect(page.locator('.bearing-sweep')).toHaveCSS('animation-name', 'none');
+  }
+});
+
+test('holotable on a phone stays above every flight control and stows on touch boost', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'touch layout');
+  await watchContact(page);
+  await page.locator('#nearby-toggle').click();
+  const panel = page.locator('#nearby');
+  await expect(panel).toHaveAttribute('data-state', 'locked');
+  const box = await panel.boundingBox();
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize().height / 2);
+  for (const selector of ['#joystick', '#touch-boost', '#console-toggle']) {
+    const control = await page.locator(selector).boundingBox();
+    expect(control).not.toBeNull();
+    expect(box.y + box.height, selector).toBeLessThanOrEqual(control.y);
+  }
+  const approachTop = await page.evaluate(() => {
+    const approach = document.querySelector('#approach');
+    const hidden = approach.hidden;
+    approach.hidden = false;
+    document.body.classList.add('approaching');
+    const top = approach.getBoundingClientRect().top;
+    document.body.classList.remove('approaching');
+    approach.hidden = hidden;
+    return top;
+  });
+  expect(box.y + box.height).toBeLessThanOrEqual(approachTop);
+  const boost = await page.locator('#touch-boost').boundingBox();
+  await page.mouse.move(boost.x + boost.width / 2, boost.y + boost.height / 2);
+  await page.mouse.down();
+  await expect(panel).toHaveAttribute('data-state', 'contact');
+  await page.mouse.up();
+});
+
+test('a lost holotable signal stays visibly unavailable', async ({ page }) => {
+  await watchContact(page, true);
+  await page.keyboard.press('f');
+  await expect(page.locator('#nearby')).toHaveClass(/stale/);
+  await expect(page.locator('#nearby-freshness')).toHaveText('Signal lost.');
+  await expect(page.locator('#nearby-rows')).not.toContainText('0');
+  await expect(page.locator('.bearing-sweep')).toHaveCSS('animation-name', 'none');
+});
+
+test('holotable cannot expand before launch or without WebGL', async ({ page }) => {
+  await mockAPI(page);
+  await page.goto('/');
+  await page.keyboard.press('f');
+  await expect(page.locator('#nearby')).toBeHidden();
+  await expect(page.locator('#nearby')).toHaveAttribute('data-state', 'contact');
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+      return type.includes('webgl') ? null : getContext.call(this, type, ...args);
+    };
+  });
+  await page.reload();
+  await expect(page.locator('#fallback')).toBeVisible();
+  await page.keyboard.press('f');
+  await expect(page.locator('#nearby')).toBeHidden();
+  await expect(page.locator('#nearby')).toHaveAttribute('data-state', 'contact');
+});

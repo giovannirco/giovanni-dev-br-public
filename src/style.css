@@ -2227,6 +2227,13 @@ body.survey-view #nearby {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  #nearby[data-state="locked"] #nearby-toggle {
+    min-height: 32px;
+    padding: 6px 9px;
+  }
+  #nearby[data-state="locked"] #nearby-sources button {
+    min-height: 32px;
+  }
 }
 
 /* The Talos schematic: one row per machine, meters rather than a wall of
