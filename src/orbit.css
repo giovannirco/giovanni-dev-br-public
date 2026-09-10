@@ -1139,6 +1139,9 @@ body.notes-open .station-footer {
 #station-body .orbit-live {
   grid-column: 1 / -1;
 }
+#station-body .orbit-live[data-feed="envoy"] {
+  align-self: start;
+}
 /* The node adds four readings to Bitcoin's block/price clock. Keep that
    column within the console's existing height, including partial sync. */
 #station-body .orbit-live[data-feed="bitcoin"] {

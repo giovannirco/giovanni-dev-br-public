@@ -107,6 +107,22 @@ export const BITCOIN_QUERIES = {
   verification: "max(bitcoin_verification_progress)",
 };
 
+// Event labels describe workloads; scrape keys describe collectors. Sum each
+// collector's events before discarding duplicate collectors of the same target.
+// In particular, Tetragon's event node label can be absent, so it cannot be
+// used as the identity of the observer. Only the final scalar leaves Mimir.
+const observerRate = (metric, window) =>
+  `sum(max by (instance) (sum by (job, instance) (rate(${metric}[${window}]))))`;
+export const NETWORK_QUERIES = {
+  flowsPerSecond: observerRate("hubble_flows_processed_total", "5m"),
+  dropsPerSecond: observerRate("hubble_drop_total", "1h"),
+  eventsPerSecond: observerRate("tetragon_events_total", "5m"),
+  // This gauge counts endpoints in each enforcement state, not policies.
+  // Audit-only endpoints do not enforce; ingress, egress or both do.
+  enforcedEndpoints: 'sum(max by (node, enforcement) (cilium_policy_endpoint_enforcement_status{enforcement=~"both|ingress|egress"}))',
+  endpoints: "sum(max by (node, enforcement) (cilium_policy_endpoint_enforcement_status))",
+};
+
 export const NODE_QUERIES = {
   inventory: "kube_node_info",
   ready: 'kube_node_status_condition{condition="Ready"} == 1',
@@ -377,5 +393,17 @@ export function createInsight({
     });
   }
 
-  return { site, lab, scout, nodes, watch, bitcoin, ready: () => Boolean(mimirUrl) };
+  async function network() {
+    return cached("network", async () => {
+      const raw = await scalars(NETWORK_QUERIES);
+      const reading = Object.fromEntries(Object.entries(raw).map(([key, value]) => [
+        key, value !== null && value >= 0 ? round(value, key.endsWith("PerSecond") ? 1 : 0) : null,
+      ]));
+      if (reading.enforcedEndpoints !== null && reading.endpoints !== null && reading.enforcedEndpoints > reading.endpoints)
+        reading.enforcedEndpoints = null;
+      return { ...reading, updatedAt: new Date(now()).toISOString() };
+    });
+  }
+
+  return { site, lab, scout, nodes, watch, bitcoin, network, ready: () => Boolean(mimirUrl) };
 }

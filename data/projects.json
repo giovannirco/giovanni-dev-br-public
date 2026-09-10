@@ -922,7 +922,9 @@
       "blurb": "Ingress on Gateway API with Envoy, split between an internal listener and a public one.",
       "details": [
         "The public edge goes out through a Cloudflare tunnel with external-dns managing the records. On the LAN the same hostnames resolve straight to the cluster through split-horizon DNS on Technitium. You're reading this page through that path right now.",
-        "Keeping the two listeners separate is what lets me put something on the LAN without also deciding to put it on the internet. That decision should be deliberate every time."
+        "Keeping the two listeners separate is what lets me put something on the LAN without also deciding to put it on the internet. That decision should be deliberate every time.",
+        "The live panel reads network observations from Hubble, runtime events from Tetragon and endpoint enforcement from Cilium. Flows are observed events, not unique connections; runtime events are activity, not a count of attacks. The enforced count covers endpoints enforcing at least one direction, alongside the total, so an endpoint with no enforcement is not silently counted as protected.",
+        "Queries discard workload labels and collapse duplicate collectors before returning a number. Drops use an hourly rate; flows and runtime events use five minutes. No workload name, destination or connection detail leaves the metrics store."
       ],
       "tags": [
         "Gateway API",
