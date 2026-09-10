@@ -105,8 +105,18 @@
            aside for anything the visitor actually opened. -->
       <aside id="nearby" hidden data-state="contact" aria-label="Nearby signal scanner">
         <p class="eyebrow">NEARBY SIGNAL</p>
-        <button id="nearby-toggle" type="button" aria-expanded="false" aria-controls="nearby-rows">Expand · F</button>
+        <button id="nearby-toggle" type="button" aria-expanded="false" aria-controls="nearby-rows nearby-bearing">Expand · F</button>
         <strong id="nearby-name">—</strong>
+        <svg id="nearby-bearing" viewBox="0 0 180 200" role="img" aria-label="Emitter bearing">
+          <circle class="range-ring" cx="90" cy="90" r="70" />
+          <circle class="range-ring" cx="90" cy="90" r="44.5" />
+          <circle class="range-ring" cx="90" cy="90" r="22" />
+          <path class="bearing-axis" d="M90 15V165 M15 90H165" />
+          <path class="bearing-nose" d="M86 96L90 85L94 96L90 94Z" />
+          <g class="bearing-sweep"><path d="M90 90V20" /></g>
+          <g id="nearby-blips"></g>
+          <text x="90" y="188" text-anchor="middle" id="nearby-range"></text>
+        </svg>
         <dl id="nearby-rows" aria-live="polite" aria-atomic="true"></dl>
         <p id="nearby-freshness" class="live-freshness"></p>
         <div id="nearby-sources" hidden role="group" aria-label="Choose a nearby signal"></div>

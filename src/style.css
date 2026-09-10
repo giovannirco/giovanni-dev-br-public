@@ -2053,6 +2053,33 @@ dialog p {
   border: 1px solid #b2d9d530;
   border-radius: 3px;
 }
+#nearby-bearing {
+  display: none;
+  width: 172px;
+  color: var(--orbit-color, #a5d9be);
+}
+#nearby-bearing .range-ring,
+#nearby-bearing .bearing-axis {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.7;
+  opacity: 0.3;
+}
+#nearby-bearing .bearing-axis { opacity: 0.13; }
+#nearby-bearing .bearing-nose,
+#nearby-blips circle { fill: currentColor; }
+#nearby-blips .contact { opacity: 0.4; }
+#nearby-bearing text { fill: currentColor; font: 9px var(--mono); letter-spacing: 0.12em; }
+.bearing-sweep { transform-origin: 90px 90px; }
+.bearing-sweep path { stroke: currentColor; stroke-width: 0.8; opacity: 0.35; }
+@media (min-width: 761px) {
+  #nearby[data-state="locked"] #nearby-bearing {
+    display: block;
+    float: right;
+    margin: 10px 0 0 12px;
+  }
+  #nearby[data-state="locked"] #nearby-rows { flex-direction: column; }
+}
 #nearby[data-state="locked"] {
   top: 50%;
   right: auto;

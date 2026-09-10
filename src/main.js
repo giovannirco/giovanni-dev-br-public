@@ -3,7 +3,7 @@ import "./orbit.css";
 import { createComm } from "./comm.js";
 import { renderChart } from "./chart.js";
 import catalog from "../data/projects.json";
-import { achievements, DOCK_MARGIN, nearbyEmitters, scannerChoice, positionOf, unlocks } from "./flight.js";
+import { achievements, DOCK_MARGIN, nearbyEmitters, scannerChoice, positionOf, unlocks, emitterBearing } from "./flight.js";
 import { bitcoinNodeRows } from "./bitcoin-reading.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -435,6 +435,7 @@ const scannerIds = new Set(Object.keys(SCANNER_SOURCES).filter((id) => ids.has(i
 const scanner = {
   expanded: false,
   maneuvering: false,
+  pose: null,
   source: null,
   pinned: null,
   candidate: null,
@@ -469,6 +470,7 @@ function scanNearby(state) {
   const now = Date.now();
   if (now - scanner.checked < 200) return;
   scanner.checked = now;
+  scanner.pose = { x: state.x, z: state.z, heading: state.heading };
   // In orbit the panel is the expanded view of exactly this data. Scanning
   // alongside it would be a second reader of the same feed for no one.
   if (state.docked) {
@@ -572,6 +574,25 @@ function renderScanner() {
     for (const button of sources.querySelectorAll("button"))
       button.setAttribute("aria-pressed", String(button.dataset.source === id));
   }
+  renderBearing();
+}
+
+function renderBearing() {
+  if (!scanner.expanded || !scanner.pose || !matchMedia("(min-width: 761px)").matches) return;
+  const contacts = scanner.inRange.map(({ id }) => {
+    const body = catalog.bodies.find((b) => b.id === id);
+    return { id, ...emitterBearing(scanner.pose, body, catalog.bodies) };
+  });
+  $("#nearby-blips").innerHTML = contacts.map(({ id, bearing, distance }) => {
+    const radius = Math.min(distance / SCANNER.EXIT, 1) * 70;
+    return `<circle cx="${(90 + Math.sin(bearing) * radius).toFixed(1)}" cy="${(90 - Math.cos(bearing) * radius).toFixed(1)}" r="${id === scanner.source ? 4 : 2.5}" class="${id === scanner.source ? "selected" : "contact"}" />`;
+  }).join("");
+  const selected = contacts.find((c) => c.id === scanner.source);
+  if (!selected) return;
+  const degrees = Math.round(Math.abs(selected.bearing) * 180 / Math.PI);
+  const direction = degrees === 0 ? "ahead" : `${degrees} degrees ${selected.bearing < 0 ? "left" : "right"}`;
+  $("#nearby-bearing").setAttribute("aria-label", `${scannerName(scanner.source)}, range ${selected.distance.toFixed(1)}, bearing ${direction}`);
+  $("#nearby-range").textContent = `RANGE ${selected.distance.toFixed(1)}`;
 }
 
 $("#nearby-sources")?.addEventListener("click", (event) => {
