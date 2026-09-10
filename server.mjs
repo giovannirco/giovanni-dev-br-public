@@ -349,6 +349,7 @@ export function createApp({
           return;
         }
         let release = null;
+        let dispatched = false;
         // Enough to reconstruct the conversation in the logs: what was asked,
         // which orbit it was scoped to, which model answered, and what came
         // back. Streamed replies are accumulated as they go.
@@ -393,6 +394,7 @@ export function createApp({
           if (!openaiBaseUrl || !openaiApiKey) throw Object.assign(new Error("Chat unconfigured"), { status: 503 });
           release = chatConcurrency.enter(callerKey);
           if (!release) throw Object.assign(new Error("Chat is busy"), { status: 429 });
+          dispatched = true;
           metrics.chatStarted();
           if (req.headers.accept?.includes("text/event-stream")) {
             for await (const text of streamChat(options)) {
@@ -415,11 +417,13 @@ export function createApp({
           // counting it as one would make the error rate a measure of how
           // often people stop reading.
           const abandoned = res.destroyed;
-          if (!abandoned) {
+          if (!abandoned && dispatched) {
             metrics.chatFail();
             logUpstream(log, "llm", err);
           }
-          done(abandoned ? "abandoned" : "error", abandoned ? {} : { status: err.status || 502, error: String(err.message).slice(0, 200) });
+          const outcome = abandoned ? "abandoned" : dispatched ? "error"
+            : err.status === 400 ? "rejected" : err.status === 429 ? "busy" : "unavailable";
+          done(outcome, abandoned ? {} : { status: err.status || 502, error: String(err.message).slice(0, 200) });
           if (!res.destroyed) {
             if (res.headersSent) res.end('event: error\ndata: {"error":"Chat unavailable."}\n\n');
             else json(res, err.status || 502, { error: "Chat unavailable. Try again shortly." });
