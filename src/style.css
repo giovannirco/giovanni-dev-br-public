@@ -2034,9 +2034,11 @@ dialog p {
   z-index: 4;
   width: 232px;
   padding: 10px 12px 9px;
-  background: #0d1c1aef;
-  border: 1px solid #a5d9be2e;
+  background: linear-gradient(120deg, #0b151af2, #080f14e8);
+  border: 1px solid #b2d9d51a;
+  border-left: 2px solid var(--orbit-color, #a5d9be);
   border-radius: 4px;
+  box-shadow: -5px 0 18px -10px var(--orbit-color, #a5d9be), 0 8px 28px #0003;
   pointer-events: none;
 }
 #nearby[data-open="true"] {
