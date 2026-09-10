@@ -395,6 +395,7 @@ const SCANNER = { ENTER: 7, EXIT: 11, DWELL: 900, REFRESH: 30_000 };
 // Two or three readings, not the whole orbit panel. Deliberately a subset of
 // the same feeds, so a visitor who then enters orbit sees the same numbers.
 const SCANNER_SOURCES = {
+  watchtower: (d) => LIVE_FEEDS.watchtower.rows(d)?.filter((_, index) => [0, 2, 4].includes(index)) || [["Watch", "Not reporting"]],
   bitcoin: (d) => [
     ["Block", number(d.height)],
     ["Price", finite(d.usd) ? `$${Math.round(d.usd).toLocaleString("en-US")}` : "—"],
