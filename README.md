@@ -43,7 +43,9 @@ Deployment addresses belong in private deployment configuration. Credentials bel
 
 Bitcoin is exposed only through allowlisted `/api/bitcoin/*` routes. Never point them at bitcoind RPC or expose Fulcrum. Chat has catalog grounding and no live-data tools; upstream model discovery is filtered through the public allowlist. No conversation database is required.
 
-Launch notifications occur when a visitor chooses Take the controls. Relay messages require a separate explicit submission. WAHA receives connection/browser context and submitted text; failure does not block flight. Request logs include visitor addresses, and chat logs include prompt/reply excerpts. Operators must decide retention, access and visitor disclosure before enabling collection. Never commit logs or captured notification payloads.
+Launch notifications occur when a visitor chooses Take the controls. Relay messages require a separate explicit submission. WAHA receives connection/browser context and submitted text; failure does not block flight. Request logs include visitor addresses, and chat logs include prompt/reply excerpts — this is deliberate conversation observability, not a leak, and it means the logs are personal data. Retention, who may read the conversation view, and any stronger disclosure are deployment decisions: record the effective values where the deployment lives, not here, and set them before enabling collection. Never commit logs or captured notification payloads.
+
+Logging-only bounds are applied to the log copy alone. Clipping a visitor or orbit identifier for storage must never change routing, quotas, grounding or the message actually sent. A refusal is not an upstream failure: an invalid orbit, an unconfigured service and a lost capacity race log as `rejected`, `unavailable` and `busy`, and none of them increments the chat error rate, so that metric measures the upstream rather than our own gatekeeping.
 
 ## Deploy and verify
 
