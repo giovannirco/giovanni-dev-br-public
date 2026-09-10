@@ -1139,6 +1139,28 @@ body.notes-open .station-footer {
 #station-body .orbit-live {
   grid-column: 1 / -1;
 }
+/* The node adds four readings to Bitcoin's block/price clock. Keep that
+   column within the console's existing height, including partial sync. */
+#station-body .orbit-live[data-feed="bitcoin"] {
+  align-self: start;
+  margin-top: 6px;
+  padding-top: 6px;
+}
+#station-body .orbit-live[data-feed="bitcoin"] p {
+  margin: 0;
+  font: 9px/12px var(--mono);
+}
+#station-body .orbit-live[data-feed="bitcoin"] .live-freshness {
+  margin-top: 6px;
+}
+#station-body .orbit-live[data-feed="bitcoin"] dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+}
+#station-body .orbit-live[data-feed="bitcoin"] dd {
+  font-size: 12px;
+}
 /* body.cockpit-view #station sets the base max-height and outranks a plain
    #station.has-live, so match that specificity. */
 #station.has-live,

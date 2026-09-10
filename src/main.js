@@ -4,6 +4,7 @@ import { createComm } from "./comm.js";
 import { renderChart } from "./chart.js";
 import catalog from "../data/projects.json";
 import { achievements, DOCK_MARGIN, nearbyEmitters, scannerChoice, positionOf, unlocks } from "./flight.js";
+import { bitcoinNodeRows } from "./bitcoin-reading.js";
 
 const $ = (selector) => document.querySelector(selector);
 const ids = new Set(catalog.bodies.map((b) => b.id));
@@ -228,17 +229,20 @@ function meter(label, fraction, value) {
 const LIVE_FEEDS = {
   bitcoin: {
     read: async (signal) => {
-      const [block, price] = await Promise.all([
+      const results = await Promise.allSettled([
         getJSON("/api/bitcoin/block", signal),
         getJSON("/api/bitcoin/price", signal),
+        getJSON("/api/bitcoin/node", signal),
       ]);
-      return { ...block, usd: price.usd };
+      if (results.every((r) => r.status === "rejected")) throw new Error("Readings unavailable");
+      const [block, price, node] = results.map((r) => r.status === "fulfilled" ? r.value : null);
+      return { ...block, usd: price?.usd, node };
     },
     rows: (d) => [
       ["Block", number(d.height)],
       ["Price", finite(d.usd) ? `$${Math.round(d.usd).toLocaleString("en-US")}` : "—"],
       ["Since block", sinceBlock(d.timestamp * 1000) || "—"],
-      ["Txs in block", number(d.transactions)],
+      ...bitcoinNodeRows(d.node),
     ],
   },
   // The machines themselves. A meter reads better than four more numbers, and
@@ -566,6 +570,7 @@ function stopLive() {
 
 function renderLive(reading) {
   if (liveReading !== reading || !reading.target.isConnected) return;
+  reading.target.dataset.feed = reading.id;
   const rows = reading.data ? reading.feed.rows(reading.data) : null;
   const age = reading.received ? Math.max(0, Math.floor((Date.now() - reading.received) / 1000)) : null;
   const stale = reading.failed || (age !== null && age > 60);
