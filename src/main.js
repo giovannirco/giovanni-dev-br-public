@@ -150,6 +150,7 @@ function openDialog(id) {
   } else activeDialog.showModal();
   if (id === "#chart") drawChart();
   if (id === "#telemetry") updateFreshness();
+  setScannerExpanded(false);
 }
 for (const dialog of document.querySelectorAll("dialog")) {
   dialog.querySelector("[data-close]")?.addEventListener("click", closeDialog);
@@ -432,6 +433,8 @@ const SCANNER_SOURCES = {
 const scannerIds = new Set(Object.keys(SCANNER_SOURCES).filter((id) => ids.has(id)));
 
 const scanner = {
+  expanded: false,
+  maneuvering: false,
   source: null,
   pinned: null,
   candidate: null,
@@ -445,6 +448,16 @@ const scanner = {
   controller: null,
   checked: 0,
 };
+
+function scannerVisible() {
+  return scanner.source && started && !fallback && !activeDialog &&
+    !document.body.matches(".in-orbit, .notes-open, .chart-mode, .survey-view");
+}
+
+function setScannerExpanded(expanded) {
+  scanner.expanded = Boolean(expanded && scannerVisible() && !scanner.maneuvering);
+  renderScanner();
+}
 
 function scannerName(id) {
   return catalog.bodies.find((b) => b.id === id)?.name || id;
@@ -474,6 +487,7 @@ function setScannerSource(id, pinned = false) {
   scanner.controller?.abort();
   scanner.controller = id ? new AbortController() : null;
   scanner.source = id;
+  if (!id) scanner.expanded = false;
   scanner.pinned = pinned ? id : null;
   scanner.candidate = null;
   scanner.data = null;
@@ -512,20 +526,30 @@ function renderScanner() {
   const panel = $("#nearby");
   if (!panel) return;
   const id = scanner.source;
-  if (!id || !started || fallback) {
+  if (!scannerVisible()) {
+    scanner.expanded = false;
+    panel.dataset.state = "contact";
+    $("#nearby-toggle").setAttribute("aria-expanded", "false");
     panel.hidden = true;
     return;
   }
-  const rows = scanner.data ? SCANNER_SOURCES[id]?.(scanner.data) : null;
+  panel.dataset.state = scanner.expanded ? "locked" : "contact";
+  $("#nearby-toggle").setAttribute("aria-expanded", String(scanner.expanded));
+  $("#nearby-toggle").textContent = scanner.expanded ? "Collapse · Esc" : "Expand · F";
+  const fullRows = scanner.expanded && scanner.data ? LIVE_FEEDS[id]?.rows(scanner.data) : null;
+  const rows = fullRows?.length ? fullRows.slice(0, 4) : scanner.data ? SCANNER_SOURCES[id]?.(scanner.data) : null;
   const age = scanner.received ? Math.floor((Date.now() - scanner.received) / 1000) : null;
   const stale = scanner.failed || (age !== null && age > 90);
   panel.hidden = false;
   panel.classList.toggle("stale", stale);
   panel.style.setProperty("--orbit-color", catalog.bodies.find((b) => b.id === id)?.color || "#a5d9be");
   $("#nearby-name").textContent = scannerName(id);
-  $("#nearby-rows").innerHTML = rows?.length
+  const rowHTML = rows?.length
     ? rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(String(value))}</dd></div>`).join("")
     : "";
+  // A fresh DOM tree every scanner tick also announces the same reading over
+  // and over. Update the live region only when its content actually changes.
+  if ($("#nearby-rows").innerHTML !== rowHTML) $("#nearby-rows").innerHTML = rowHTML;
   $("#nearby-freshness").textContent = scanner.failed
     ? "Signal lost."
     : age === null
@@ -553,6 +577,10 @@ function renderScanner() {
 $("#nearby-sources")?.addEventListener("click", (event) => {
   const id = event.target.closest("button")?.dataset.source;
   if (id) setScannerSource(id, true);
+});
+$("#nearby-toggle").addEventListener("click", () => setScannerExpanded(!scanner.expanded));
+$("#nearby").addEventListener("click", (event) => {
+  if (!event.target.closest("button")) setScannerExpanded(!scanner.expanded);
 });
 
 // One timer, not the render loop: refresh at most every 30 seconds, and never
@@ -996,6 +1024,15 @@ $("#gitops-toggle").addEventListener("click", () => {
 });
 $("#signal-toggle").addEventListener("click", () => openDialog("#telemetry"));
 window.addEventListener("keydown", (e) => {
+  if (e.code === "KeyF" && !e.repeat && !e.target.closest("input, textarea, select, [contenteditable]") && scannerVisible()) {
+    e.preventDefault();
+    setScannerExpanded(!scanner.expanded);
+  }
+  if (e.code === "Escape" && scanner.expanded) {
+    e.preventDefault();
+    setScannerExpanded(false);
+    return;
+  }
   if (e.code === "KeyM" && !e.repeat && !e.target.closest("input, textarea")) {
     e.preventDefault();
     if (activeDialog?.id === "chart") closeDialog();
@@ -1325,6 +1362,10 @@ try {
         el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
         el.style.visibility =
           visible && relayUnlocked(spec) ? "visible" : "hidden";
+      },
+      onFlightInput(input) {
+        scanner.maneuvering = input.thrust > 0.05 || input.brake || input.boost;
+        if (scanner.maneuvering && scanner.expanded) setScannerExpanded(false);
       },
       onState(state) {
         if (!started || fallback) return;

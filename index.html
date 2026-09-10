@@ -103,10 +103,11 @@
       </div>
       <!-- Readings you fly past rather than dock for. Non-modal, and it steps
            aside for anything the visitor actually opened. -->
-      <aside id="nearby" hidden aria-live="polite">
+      <aside id="nearby" hidden data-state="contact" aria-label="Nearby signal scanner">
         <p class="eyebrow">NEARBY SIGNAL</p>
+        <button id="nearby-toggle" type="button" aria-expanded="false" aria-controls="nearby-rows">Expand · F</button>
         <strong id="nearby-name">—</strong>
-        <dl id="nearby-rows"></dl>
+        <dl id="nearby-rows" aria-live="polite" aria-atomic="true"></dl>
         <p id="nearby-freshness" class="live-freshness"></p>
         <div id="nearby-sources" hidden role="group" aria-label="Choose a nearby signal"></div>
       </aside>

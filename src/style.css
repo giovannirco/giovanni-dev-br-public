@@ -2041,8 +2041,26 @@ dialog p {
   box-shadow: -5px 0 18px -10px var(--orbit-color, #a5d9be), 0 8px 28px #0003;
   pointer-events: none;
 }
-#nearby[data-open="true"] {
+#nearby:not([hidden]) {
   pointer-events: auto;
+}
+#nearby-toggle {
+  float: right;
+  padding: 3px 5px;
+  font: 9px var(--mono);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid #b2d9d530;
+  border-radius: 3px;
+}
+#nearby[data-state="locked"] {
+  top: 50%;
+  right: auto;
+  left: 22px;
+  width: 400px;
+  max-height: calc(100svh - 200px);
+  overflow: auto;
+  transform: translateY(-50%);
 }
 #nearby .eyebrow {
   color: #a5d9be95;
@@ -2059,7 +2077,7 @@ dialog p {
   gap: 6px 18px;
   margin: 8px 0 0;
 }
-#nearby div {
+#nearby-rows > div {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -2126,8 +2144,20 @@ body.survey-view #nearby {
     font-size: 11px;
   }
   /* Two readings is all a phone has room for beside the scene. */
-  #nearby div:nth-of-type(n + 3) {
+  #nearby[data-state="contact"] #nearby-rows > div:nth-of-type(n + 3) {
     display: none;
+  }
+  #nearby[data-state="locked"] {
+    top: 84px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(50svh - 96px);
+    transform: none;
+  }
+  #nearby[data-state="locked"] dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
