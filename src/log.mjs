@@ -17,7 +17,7 @@ import { originalScheme } from "./scheme.mjs";
 
 const PROMPT_CHARS = 800;
 const REPLY_CHARS = 1200;
-const CONTROL = /[\u0000-\u001f\u007f]/g;
+const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g;
 
 export function createLogger({
   level = process.env.LOG_LEVEL ||
@@ -50,6 +50,16 @@ function text(value, max) {
     .replace(CONTROL, " ")
     .trim()
     .slice(0, max);
+}
+
+// These limits affect the log copy only. A clipped visitor or orbit identifier
+// must never change routing, quotas, grounding or the message that is sent.
+function boundedFields(fields) {
+  const out = { ...fields };
+  for (const [key, max] of Object.entries({ visitor: 64, bodyId: 64, relayId: 64, model: 80, outcome: 40, kind: 40, error: 200, prompt: PROMPT_CHARS, reply: REPLY_CHARS })) {
+    if (key in out) out[key] = text(out[key], max);
+  }
+  return out;
 }
 
 // Where a request landed, so a dashboard can separate a visitor loading the
@@ -127,7 +137,7 @@ export function logRequest(log, req, res, path) {
         referrer: referrerOrigin(req.headers?.referer),
         ...clientFields(req),
       },
-      `${req.method} ${path} ${res.writableFinished ? res.statusCode : 499}`,
+      text(`${text(req.method, 16)} ${text(path, 300)} ${res.writableFinished ? res.statusCode : 499}`, 400),
     );
   };
   res.on("finish", emit);
@@ -135,6 +145,7 @@ export function logRequest(log, req, res, path) {
 }
 
 export function logChat(log, req, fields) {
+  fields = boundedFields(fields);
   log.info(
     {
       event: "chat",
@@ -149,6 +160,7 @@ export function logChat(log, req, fields) {
 
 // A message actually left for Gio's phone, or did not.
 export function logBeacon(log, req, fields) {
+  fields = boundedFields(fields);
   log.info(
     { event: fields.kind, ...fields, ...clientFields(req) },
     `${fields.kind} ${fields.outcome}`,
@@ -158,6 +170,7 @@ export function logBeacon(log, req, fields) {
 // Something a visitor did that the server declined: a cross-origin post, a
 // quota, a method. These are the lines worth alerting on.
 export function logRefused(log, req, path, reason) {
+  reason = text(reason, 64);
   log.warn(
     {
       event: "refused",
@@ -167,7 +180,7 @@ export function logRefused(log, req, path, reason) {
       origin: text(req.headers?.origin, 200),
       ...clientFields(req),
     },
-    `refused ${reason} ${req.method} ${path}`,
+    text(`refused ${reason} ${text(req.method, 16)} ${text(path, 300)}`, 400),
   );
 }
 
