@@ -15,3 +15,16 @@ MUST NOT:
 - Copy kart, island, citadel, or Bruno Blender files.
 - Invent metrics, headcount, or authorship.
 - Put secrets in git.
+- Name real private repositories, cluster hostnames, internal service addresses or machine names anywhere in this public tree, including docs (test fixtures use made-up internal-looking values).
+
+The boundary (see README): the code is public, the addresses behind it are not.
+
+- `test/disclosure.test.mjs` drives every public route with internal-looking configuration and failing upstreams. Every new integration gets an entry there in the same pull request.
+- Upstream data is picked and coerced field by field in the server; never forward a raw upstream body. Missing readings render as unavailable, never as zero.
+- Aggregate-only panels (uptime) must not group by, select or return per-monitor series.
+- New live panels read Mimir over the existing egress where possible. One integration per pull request: exporter → PromQL in `src/insight.mjs` → body in `data/projects.json` → disclosure test entry.
+- Logs contain visitor addresses and chat excerpts: they are personal data. Never commit logs or captured notification payloads. Intercept notification endpoints in live browser reviews.
+
+Verify before shipping: `npm run build && npm test && npm run test:browser`.
+
+Release: the default branch is `master`. Pushing it runs `release.yml`, which builds `ghcr.io/giovannirco/giovanni-dev-br-public:<sha>` and prints the digest; the pin lives in private deployment configuration. Commit or push only when asked.
