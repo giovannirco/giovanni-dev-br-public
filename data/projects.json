@@ -407,7 +407,7 @@
       "angle": 1.514,
       "sector": "Homelab / Storage",
       "subtitle": "Volumes with a physical home",
-      "blurb": "Proxmox CSI on ZFS for VM workloads, OpenEBS for bare metal, and NFS for shared storage.",
+      "blurb": "Proxmox CSI on ZFS, OpenEBS for bare metal, and NFS for shared storage, with live disk-health and recorded-backup summaries.",
       "details": [
         "VM-backed application volumes use Proxmox CSI. A volume can follow a workload between VMs on the same Proxmox host; it is still tied to that host’s storage.",
         "OpenEBS supplies local storage on the bare-metal worker. NFS covers shared data, and the new clusters use Velero and CloudNativePG backups to object storage on the NAS.",

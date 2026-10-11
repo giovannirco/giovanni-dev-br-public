@@ -1,3 +1,4 @@
+import { STORAGE_QUERIES, storageReadings } from "./storage.mjs";
 import { UNIFI_QUERY, unifiReadings } from "./unifi.mjs";
 import { GPU_QUERY, gpuReadings } from "./gpu.mjs";
 import { createReadCache, upstreamJson } from "./upstream.mjs";
@@ -484,8 +485,9 @@ export function createInsight({
     });
   }
 
+  const storage = () => cached("storage", async () => storageReadings(await scalars(STORAGE_QUERIES), now()));
   const unifi = () => cached("unifi", async () => unifiReadings(await promql(UNIFI_QUERY), now()));
   const gpu = () => cached("gpu", async () => gpuReadings(await promql(GPU_QUERY), now()));
 
-  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, gpu, unifi, ready: () => Boolean(mimirUrl) };
+  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, gpu, unifi, storage, ready: () => Boolean(mimirUrl) };
 }

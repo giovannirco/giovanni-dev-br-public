@@ -1321,3 +1321,10 @@ test('UniFi WAN survives a missing cluster observer and keeps zero traffic',asyn
   await expect(live).toContainText('Cluster observersNot reporting');
   const grid=page.getByRole('region',{name:'Network and edge readings'});await grid.focus();await page.keyboard.press('End');await expect(grid).toBeFocused();
 });
+
+test('storage distinguishes recorded backup jobs from restore validation',async ({page})=>{
+ await mockAPI(page);
+ await page.route('**/api/insight/storage',route=>route.fulfill({json:{disks:6,disksPassing:6,guests:51,backupLogs:28,backupPassed:27,backupRuns:28,newestBackup:new Date(Date.now()-3600000).toISOString()}}));
+ await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');await visit(page,'storage');
+ const live=page.locator('.orbit-live');await expect(live).toContainText('28/51');await expect(live).toContainText('27/28');await expect(live).toContainText('restores are not verified here');
+});

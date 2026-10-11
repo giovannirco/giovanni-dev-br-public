@@ -227,6 +227,20 @@ function meter(label, fraction, value) {
 }
 
 const LIVE_FEEDS = {
+  storage: {
+    url: "/api/insight/storage",
+    rows: d => [d.disks,d.guests,d.backupRuns].some(finite) ? [
+      ["Disks passing SMART",`${number(d.disksPassing)}/${number(d.disks)}`],
+      ["Guests with backup logs",`${number(d.backupLogs)}/${number(d.guests)}`],
+      ["Last recorded runs passed",`${number(d.backupPassed)}/${number(d.backupRuns)}`],
+      ["Newest recorded backup",d.newestBackup ? relativeTime(d.newestBackup) : "—"],
+    ] : null,
+    draw: d => {
+      const rows=LIVE_FEEDS.storage.rows(d);
+      return rows ? `<div class="node-grid storage-readings" tabindex="0" role="region" aria-label="Storage health and recorded backups"><dl>${rows.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl><p class="memory-note">Hypervisor reports. Backup logs describe recorded jobs; restores are not verified here.</p></div>` : "";
+    },
+    unavailable: "Storage health is not reporting right now.",
+  },
   envoy: {
     read: async signal => {
       const result = await Promise.allSettled([getJSON("/api/insight/network",signal),getJSON("/api/insight/unifi",signal)]);
@@ -710,7 +724,7 @@ function stationHTML(spec, first, mode) {
 }
 function fillStation(spec) {
   $("#station").classList.toggle("has-featured", Boolean(spec.featured));
-  $("#station").classList.toggle("has-fleet", ["talos", "proxmox", "gpu-lab", "envoy"].includes(spec.id));
+  $("#station").classList.toggle("has-fleet", ["talos", "proxmox", "gpu-lab", "envoy", "storage"].includes(spec.id));
   const parent = catalog.bodies.find((b) => b.id === spec.parent);
   const family = catalog.bodies.filter(
     (b) => b.parent === (spec.parent || spec.id),
