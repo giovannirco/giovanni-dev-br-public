@@ -1,4 +1,4 @@
-FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS build
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -9,14 +9,14 @@ RUN npm run build
 # playwright, which have no business in a production image. Until the logger
 # arrived the server had no runtime dependency at all and this stage did not
 # exist — a missing node_modules would now be a crash loop, not a warning.
-FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS deps
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
-FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 WORKDIR /app
-LABEL org.opencontainers.image.source="https://github.com/giovannirco/giovanni-dev-br"
+LABEL org.opencontainers.image.source="https://github.com/giovannirco/giovanni-dev-br-public"
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
