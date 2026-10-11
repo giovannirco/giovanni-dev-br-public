@@ -130,6 +130,15 @@ export const SCOUT_QUERIES = {
   refreshErrors: "max(job_scout_metrics_db_refresh_errors)",
 };
 
+// Only the unprivileged API collector supplies this feed. No guest labels.
+export const PROXMOX_QUERY = '{__name__=~"orrery_proxmox_(collection_success|collection_timestamp_seconds|up|cpu_ratio|cores|memory_used_bytes|memory_total_bytes|uptime_seconds|vms_total|vms_running|containers_total|containers_running)"}';
+const PROXMOX_FIELDS = {
+  up: "up", cpu_ratio: "cpu", cores: "cores", memory_used_bytes: "memoryUsed",
+  memory_total_bytes: "memoryTotal", uptime_seconds: "uptimeSeconds",
+  vms_total: "vmsTotal", vms_running: "vmsRunning",
+  containers_total: "containersTotal", containers_running: "containersRunning",
+};
+
 export const NODE_QUERIES = {
   inventory: "kube_node_info",
   ready: 'kube_node_status_condition{condition="Ready"} == 1',
@@ -199,6 +208,7 @@ export function createInsight({
   mimirTenant = process.env.MIMIR_TENANT || "anonymous",
   nodeAliases = process.env.PUBLIC_NODE_ALIASES || "",
   clusterAliases = process.env.PUBLIC_CLUSTER_ALIASES || "",
+  proxmoxAliases = process.env.PUBLIC_PROXMOX_ALIASES || "",
   fetchImpl = fetch,
   cacheMs = CACHE_MS,
   now = () => Date.now(),
@@ -206,6 +216,7 @@ export function createInsight({
   const cached = createReadCache({ ttlMs: cacheMs, now });
   const aliases = parseNodeAliases(nodeAliases);
   const clusterNames = parseNodeAliases(clusterAliases);
+  const hostNames = parseNodeAliases(proxmoxAliases);
 
   // All panels share this budget. A cold site read alone has seventeen
   // queries; overlapping panels otherwise exhaust small Mimir query queues.
@@ -424,6 +435,41 @@ export function createInsight({
     });
   }
 
+  async function proxmox() {
+    return cached("proxmox", async () => {
+      const rows = await promql(PROXMOX_QUERY);
+      const hosts = new Map([...hostNames.keys()].map(name => [name, {}]));
+      for (const row of rows) {
+        const name = row.metric?.instance;
+        const field = String(row.metric?.__name__ || "").replace(/^orrery_proxmox_/, "");
+        if (!NODE_NAME.test(name || "") || !(Object.hasOwn(PROXMOX_FIELDS, field) || field === "collection_success" || field === "collection_timestamp_seconds")) continue;
+        const host = hosts.get(name) || {};
+        const value = num(row.value?.[1]);
+        if (value !== null) host[field] = host[field] === undefined ? value : Math.min(host[field], value);
+        hosts.set(name, host);
+      }
+      return {
+        hosts: [...hosts].sort(([a], [b]) => a.localeCompare(b)).slice(0, 16).map(([name, raw], index) => {
+          const age = now() / 1000 - raw.collection_timestamp_seconds;
+          const reporting = raw.collection_success === 1 && age >= -30 && age <= 180;
+          const host = { name: hostNames.get(name) || `Host ${index + 1}`, reporting };
+          for (const [key, field] of Object.entries(PROXMOX_FIELDS)) {
+            const value = raw[key];
+            host[field] = reporting && Number.isFinite(value) && value >= 0 ? round(value, field === "cpu" ? 4 : 0) : null;
+          }
+          host.up = reporting && raw.up === 1 ? true : reporting && raw.up === 0 ? false : null;
+          if (host.cpu > 1) host.cpu = null;
+          if (host.memoryTotal === null || host.memoryTotal <= 0 || host.memoryUsed > host.memoryTotal) host.memoryUsed = null;
+          for (const kind of ["vms", "containers"])
+            if (host[`${kind}Total`] === null || host[`${kind}Running`] > host[`${kind}Total`]) host[`${kind}Running`] = null;
+          host.updatedAt = reporting ? new Date(raw.collection_timestamp_seconds * 1000).toISOString() : null;
+          return host;
+        }),
+        updatedAt: new Date(now()).toISOString(),
+      };
+    });
+  }
+
   async function network() {
     return cached("network", async () => {
       const raw = await scalars(NETWORK_QUERIES);
@@ -436,5 +482,5 @@ export function createInsight({
     });
   }
 
-  return { site, lab, scout, nodes, watch, bitcoin, network, ready: () => Boolean(mimirUrl) };
+  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, ready: () => Boolean(mimirUrl) };
 }

@@ -483,6 +483,34 @@
       ]
     },
     {
+      "id": "proxmox",
+      "name": "Proxmox hosts",
+      "kind": "moon",
+      "parent": "homelab",
+      "color": "#de9b67",
+      "radius": 0.48,
+      "orbit": 10.7,
+      "angle": 4.827,
+      "sector": "Homelab / Virtualization",
+      "subtitle": "The hosts beneath the clusters",
+      "blurb": "Proxmox runs the virtual machines and containers behind the lab. This panel shows the hosts themselves: CPU, memory, uptime and running guests.",
+      "details": [
+        "A dedicated collector reads the Proxmox API with a privilege-separated, audit-only token. Host readings travel through the existing metrics pipeline; the public website has no hypervisor credentials.",
+        "Talos cluster membership belongs in Cluster fleet. Here, VMs and LXCs are counted per host, with templates excluded. The bare-metal GPU worker is outside Proxmox. Readings older than three minutes become unavailable."
+      ],
+      "tags": [
+        "Proxmox",
+        "Virtual machines",
+        "LXC",
+        "Read-only API"
+      ],
+      "lesson": "The host and the cluster describe different layers of the same system.",
+      "prompts": [
+        "How does Proxmox support the Talos clusters?",
+        "How is the Proxmox integration kept read-only?"
+      ]
+    },
+    {
       "id": "handbook",
       "name": "Operator handbook",
       "kind": "moon",

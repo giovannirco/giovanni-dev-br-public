@@ -1275,3 +1275,19 @@ test("fleet separates nodes by cluster and features the public Job Scout project
   await expect(page.locator('[data-neighbor="scout"]')).toContainText("Featured project");
   await expect(page.locator('[data-neighbor="platen"]')).toBeVisible();
 });
+
+test("Proxmox shows host utilization and honest unavailable collectors", async ({ page }) => {
+  await mockAPI(page);
+  await page.route("**/api/insight/proxmox", route => route.fulfill({ json: { hosts: [
+    { name: "Host 1", reporting: true, up: true, cpu: 0.23, cores: 16, memoryUsed: 12e9, memoryTotal: 48e9, vmsRunning: 5, vmsTotal: 7, containersRunning: 0, containersTotal: 3, uptimeSeconds: 90061 },
+    { name: "Host 2", reporting: false, up: null, cpu: null, cores: null, memoryUsed: null, memoryTotal: null, vmsRunning: null, vmsTotal: null, containersRunning: null, containersTotal: null, uptimeSeconds: null },
+  ] } }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await visit(page, "proxmox");
+  await expect(page.locator(".node-card").first()).toContainText("Online · 16 cores");
+  await expect(page.locator(".node-card").first()).toContainText("23%");
+  await expect(page.locator(".node-card").first()).toContainText("VMs 5/7 · LXCs 0/3 running");
+  await expect(page.locator(".node-card").last()).toContainText("Reading unavailable");
+  await expect(page.locator(".node-card").last()).not.toContainText("0%");
+});

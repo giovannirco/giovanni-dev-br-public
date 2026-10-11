@@ -265,7 +265,7 @@ const LIVE_FEEDS = {
     draw: (d) => {
       if (!d.nodes?.length) return "";
       const clusters = d.clusters?.length ? d.clusters : [{ id: undefined, name: "Cluster" }];
-      return `<div class="node-grid" tabindex="0" role="region" aria-label="Cluster nodes">${clusters.map(cluster => {
+      return `<p class="fleet-summary">${clusters.length} ${clusters.length === 1 ? "cluster" : "clusters"} · ${d.nodes.length} nodes</p><div class="node-grid" tabindex="0" role="region" aria-label="Cluster nodes">${clusters.map(cluster => {
         const nodes = d.nodes.filter(node => node.cluster === cluster.id);
         return `<section class="node-cluster"><h3>${esc(cluster.name)}<span>${nodes.length} ${nodes.length === 1 ? "node" : "nodes"}</span></h3><ul class="cluster-nodes">${nodes.map((node) => {
               const known = finite(node.cpu) || finite(node.memoryTotal) || finite(node.pods);
@@ -284,6 +284,15 @@ const LIVE_FEEDS = {
             .join("")}</ul></section>`;
       }).join("")}</div>`;
     },
+  },
+  proxmox: {
+    url: "/api/insight/proxmox",
+    rows: d => d.hosts?.length ? [] : null,
+    unavailable: "Proxmox is not reporting right now.",
+    draw: d => d.hosts?.length ? `<div class="node-grid" tabindex="0" role="region" aria-label="Proxmox hosts"><ul class="cluster-nodes">${d.hosts.map(host => {
+      const memory = finite(host.memoryUsed) && finite(host.memoryTotal) && host.memoryTotal > 0 ? host.memoryUsed / host.memoryTotal : null;
+      return `<li class="node-card" data-state="${host.reporting && host.up === true ? "ready" : host.up === false ? "not-ready" : "unknown"}"><p class="node-head"><i class="node-dot" aria-hidden="true"></i>${esc(host.name)}</p><p class="node-status">${host.reporting ? host.up === true ? "Online" : host.up === false ? "Offline" : "Status unknown" : "Reading unavailable"} · ${number(host.cores)} cores</p>${meter("CPU", host.cpu, finite(host.cpu) ? `${Math.round(host.cpu * 100)}%` : "—")}${meter("RAM", memory, memory !== null ? `${(host.memoryUsed / 1e9).toFixed(0)}/${(host.memoryTotal / 1e9).toFixed(0)} GB` : "—")}<p class="node-status">VMs ${number(host.vmsRunning)}/${number(host.vmsTotal)} · LXCs ${number(host.containersRunning)}/${number(host.containersTotal)} running</p><p class="node-status">Uptime ${finite(host.uptimeSeconds) ? `${Math.floor(host.uptimeSeconds / 86400)}d ${Math.floor(host.uptimeSeconds % 86400 / 3600)}h` : "—"}</p></li>`;
+    }).join("")}</ul></div>` : "",
   },
   // Aggregates only, by construction: the feed behind this cannot return a
   // per-monitor row, so there is nothing here to accidentally render.
@@ -672,6 +681,8 @@ function stationHTML(spec, first, mode) {
   return `<p class="eyebrow">${mode} / ${String(catalog.bodies.indexOf(spec) + 1).padStart(2, "0")} <span class="dossier-sector">${esc(spec.sector)}</span></p><div class="dossier-emblem" style="--body-color:${spec.color}" aria-hidden="true">${emblems[spec.id] || "◉"}</div><h2 id="station-title">${esc(spec.name)}</h2><p class="dossier-subtitle">${esc(spec.subtitle)}</p><p class="dossier-lead">${esc(spec.blurb)}</p>${spec.details.map((p) => `<p>${esc(p)}</p>`).join("")}<ul class="tags">${spec.tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul><p class="field-note"><span class="eyebrow">FIELD NOTE ${first ? "RECORDED" : "REVISITED"}</span>${esc(spec.lesson)}</p>${spec.href ? `<a class="dossier-link" href="${esc(spec.href)}">${esc(spec.linkLabel)} <span aria-hidden="true">↗</span></a>` : ""}${spec.id === "bitcoin" ? '<button id="station-bitcoin" class="dossier-link">Open live telemetry ↗</button>' : ""}`;
 }
 function fillStation(spec) {
+  $("#station").classList.toggle("has-featured", Boolean(spec.featured));
+  $("#station").classList.toggle("has-fleet", ["talos", "proxmox"].includes(spec.id));
   const parent = catalog.bodies.find((b) => b.id === spec.parent);
   const family = catalog.bodies.filter(
     (b) => b.parent === (spec.parent || spec.id),
