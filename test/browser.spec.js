@@ -1311,3 +1311,13 @@ test("GPU usage shows real zeroes, gaps and binary VRAM", async ({page}) => {
   await expect(page.locator('.gpu-grid .node-card').last()).toContainText('Unavailable');
   await expect(page.locator('.gpu-grid .node-card').last().locator('.node-head')).not.toContainText('0%');
 });
+
+test('UniFi WAN survives a missing cluster observer and keeps zero traffic',async ({page})=>{
+  await mockAPI(page);
+  await page.route('**/api/insight/network',route=>route.fulfill({status:502,json:{error:'unavailable'}}));
+  await page.route('**/api/insight/unifi',route=>route.fulfill({json:{reporting:true,internetUp:true,downloadBytes:0,uploadBytes:125000,latencyMs:8,online:13,devices:13,apsOnline:6,aps:6,switchesOnline:6,switches:6,updatedAt:new Date().toISOString()}}));
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');await visit(page,'envoy');
+  const live=page.locator('.orbit-live');await expect(live).toContainText('0.0 / 1.0 Mb/s');await expect(live).toContainText('13/13');
+  await expect(live).toContainText('Cluster observersNot reporting');
+  const grid=page.getByRole('region',{name:'Network and edge readings'});await grid.focus();await page.keyboard.press('End');await expect(grid).toBeFocused();
+});

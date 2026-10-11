@@ -228,14 +228,34 @@ function meter(label, fraction, value) {
 
 const LIVE_FEEDS = {
   envoy: {
-    url: "/api/insight/network",
-    rows: (d) => [d.flowsPerSecond, d.dropsPerSecond, d.eventsPerSecond, d.enforcedEndpoints, d.endpoints].some(finite)
-      ? [
-          ["Observed flows · /s", finite(d.flowsPerSecond) ? d.flowsPerSecond.toLocaleString("en-US", { maximumFractionDigits: 1 }) : "—"],
-          ["Drops · /s", finite(d.dropsPerSecond) ? d.dropsPerSecond.toFixed(1) : "—"],
-          ["Runtime events · /s", finite(d.eventsPerSecond) ? d.eventsPerSecond.toFixed(1) : "—"],
-          ["Policy enforced", `${number(d.enforcedEndpoints)}/${number(d.endpoints)} endpoints`],
-        ] : null,
+    read: async signal => {
+      const result = await Promise.allSettled([getJSON("/api/insight/network",signal),getJSON("/api/insight/unifi",signal)]);
+      if(result.every(r=>r.status==="rejected")) throw new Error("Network readings unavailable");
+      return {...(result[0].status==="fulfilled" ? result[0].value : {}),unifi:result[1].status==="fulfilled" ? result[1].value : null};
+    },
+    rows: d => {
+      const u=d.unifi;
+      const network = u?.reporting ? [
+        ["Internet",u.internetUp===true ? "Online" : u.internetUp===false ? "Degraded" : "—"],
+        ["WAN down / up",`${finite(u.downloadBytes) ? (u.downloadBytes*8/1e6).toFixed(1) : "—"} / ${finite(u.uploadBytes) ? (u.uploadBytes*8/1e6).toFixed(1) : "—"} Mb/s`],
+        ["WAN latency",finite(u.latencyMs) ? `${Math.round(u.latencyMs)} ms` : "—"],
+        ["Devices online",`${number(u.online)}/${number(u.devices)}`],
+        ["APs / switches",`${number(u.apsOnline)}/${number(u.aps)} · ${number(u.switchesOnline)}/${number(u.switches)}`],
+        ["Network sample",u.updatedAt ? relativeTime(u.updatedAt) : "—"],
+      ] : [["UniFi","Not reporting"]];
+      const observers = [d.flowsPerSecond,d.dropsPerSecond,d.eventsPerSecond,d.endpoints].some(finite);
+      if(!u?.reporting&&!observers)return null;
+      return [...network,...(observers ? [
+        ["Observed flows · /s",finite(d.flowsPerSecond) ? d.flowsPerSecond.toLocaleString("en-US",{maximumFractionDigits:1}) : "—"],
+        ["Drops · /s",finite(d.dropsPerSecond) ? d.dropsPerSecond.toFixed(1) : "—"],
+        ["Runtime events · /s",finite(d.eventsPerSecond) ? d.eventsPerSecond.toFixed(1) : "—"],
+        ["Policy enforced",`${number(d.enforcedEndpoints)}/${number(d.endpoints)} endpoints`],
+      ] : [["Cluster observers","Not reporting"]])];
+    },
+    draw: d => {
+      const rows=LIVE_FEEDS.envoy.rows(d);
+      return rows ? `<div class="node-grid network-readings" tabindex="0" role="region" aria-label="Network and edge readings"><dl>${rows.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl></div>` : "";
+    },
     unavailable: "The network observers are not reporting right now.",
   },
   bitcoin: {
@@ -690,7 +710,7 @@ function stationHTML(spec, first, mode) {
 }
 function fillStation(spec) {
   $("#station").classList.toggle("has-featured", Boolean(spec.featured));
-  $("#station").classList.toggle("has-fleet", ["talos", "proxmox", "gpu-lab"].includes(spec.id));
+  $("#station").classList.toggle("has-fleet", ["talos", "proxmox", "gpu-lab", "envoy"].includes(spec.id));
   const parent = catalog.bodies.find((b) => b.id === spec.parent);
   const family = catalog.bodies.filter(
     (b) => b.parent === (spec.parent || spec.id),

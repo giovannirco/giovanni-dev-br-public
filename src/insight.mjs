@@ -1,3 +1,4 @@
+import { UNIFI_QUERY, unifiReadings } from "./unifi.mjs";
 import { GPU_QUERY, gpuReadings } from "./gpu.mjs";
 import { createReadCache, upstreamJson } from "./upstream.mjs";
 import { createHash } from "node:crypto";
@@ -483,7 +484,8 @@ export function createInsight({
     });
   }
 
+  const unifi = () => cached("unifi", async () => unifiReadings(await promql(UNIFI_QUERY), now()));
   const gpu = () => cached("gpu", async () => gpuReadings(await promql(GPU_QUERY), now()));
 
-  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, gpu, ready: () => Boolean(mimirUrl) };
+  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, gpu, unifi, ready: () => Boolean(mimirUrl) };
 }

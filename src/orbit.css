@@ -1275,3 +1275,8 @@ body.cockpit-view #station {
 .orbit-live .node-meter b { width: auto; flex: 0 0 auto; }
 .orbit-live .node-meter i { min-width: 12px; }
 .memory-note { margin: 0 0 8px; color: #cfe6d8; font-size: 11px; line-height: 1.4; }
+#station.has-fleet .network-readings { max-height: 124px; }
+.network-readings dl { margin: 0; }
+@media (max-width: 640px) {
+  #station.has-fleet .network-readings { max-height: 175px; }
+}
