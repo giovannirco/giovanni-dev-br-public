@@ -378,7 +378,7 @@
       "angle": 5.398,
       "sector": "Homelab / Networking",
       "subtitle": "Deliberate paths in and out",
-      "blurb": "Cilium and BGP inside the lab, Envoy Gateway at the edge, and separate paths for public and internal services.",
+      "blurb": "UniFi WAN and device health, Cilium and BGP inside the lab, and Envoy Gateway at the edge.",
       "details": [
         "Each cluster has its own network segment and load-balancer pool. BGP advertises service addresses to the router; Cilium policies restrict workload traffic.",
         "Public traffic arrives through Cloudflare tunnels. On the LAN, Technitium resolves the same service names to internal gateways.",
