@@ -91,6 +91,7 @@ const PUBLIC_PATHS = [
   "/api/insight/watch",
   "/api/insight/network",
   "/api/insight/proxmox",
+  "/api/insight/gpu",
   "/api/insight/nowhere",
   "/api/bitcoin/tip",
   "/api/bitcoin/node",

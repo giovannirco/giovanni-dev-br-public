@@ -1253,3 +1253,25 @@ body.cockpit-view #station {
 @media (max-width: 760px) {
   #station.has-fleet .orbit-live[data-feed="talos"] .node-grid { max-height: 124px; }
 }
+
+/* GPU history uses the same compact, scrollable instrument bay as the fleet. */
+#station.has-fleet .gpu-grid { max-height: 166px; }
+.gpu-grid .cluster-nodes { grid-template-columns: 1fr; }
+.gpu-grid .node-card { padding: 6px 8px; }
+.orbit-live .usage-graph { display: block; width: 100%; height: 68px; overflow: visible; }
+.usage-graph text { fill: var(--muted); font: 9px monospace; }
+.usage-graph .graph-axis { fill: none; stroke: #8fd3c444; stroke-width: .5; }
+.usage-graph .graph-line { fill: none; stroke: #8fd3c4; stroke-width: 1.5; }
+.usage-graph circle { fill: #8fd3c4; }
+.gpu-stats { margin: 4px 0; font-size: 11px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  #station.has-fleet .gpu-grid { max-height: 184px; }
+}
+.orbit-live .node-meter b { white-space: nowrap; }
+#station.has-fleet .gpu-grid { max-height: 118px; }
+@media (max-width: 640px) {
+  #station.has-fleet .gpu-grid { max-height: 154px; }
+}
+.orbit-live .node-meter b { width: auto; flex: 0 0 auto; }
+.orbit-live .node-meter i { min-width: 12px; }
+.memory-note { margin: 0 0 8px; color: #cfe6d8; font-size: 11px; line-height: 1.4; }
