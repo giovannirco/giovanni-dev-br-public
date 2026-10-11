@@ -1250,3 +1250,28 @@ test('a missing network feed says it is not reporting', async ({ page }) => {
   await visit(page, 'envoy');
   await expect(page.locator('.orbit-live')).toContainText('The network observers are not reporting right now.');
 });
+
+
+test("fleet separates nodes by cluster and features the public Job Scout project", async ({ page }) => {
+  await mockAPI(page);
+  await page.route("**/api/insight/nodes", route => route.fulfill({ json: {
+    clusters: [{ id: "a", name: "Personal services" }, { id: "b", name: "Production" }],
+    nodes: [
+      { cluster: "a", name: "node-a", ready: true, cores: 8, cpu: 0.2, pods: 10 },
+      { cluster: "b", name: "node-b", ready: true, cores: 4, cpu: 0.4, pods: 20 },
+    ],
+  } }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await visit(page, "talos");
+  const groups = page.locator(".node-cluster");
+  await expect(groups).toHaveCount(2);
+  await expect(groups.first()).toContainText("Personal services");
+  await expect(groups.first()).toContainText("node-a");
+  await expect(groups.first()).not.toContainText("node-b");
+  await expect(groups.last()).toContainText("Production");
+  await expect(groups.last()).toContainText("node-b");
+  await visit(page, "workshop");
+  await expect(page.locator('[data-neighbor="scout"]')).toContainText("Featured project");
+  await expect(page.locator('[data-neighbor="platen"]')).toBeVisible();
+});

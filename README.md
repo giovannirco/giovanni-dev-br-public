@@ -73,3 +73,12 @@ Run the Node and desktop/phone browser suites before shipping. Review the deploy
 Public dossiers live in `data/projects.json`. Preserve verified career facts; do not invent metrics, authorship or private employer project names. The resume application is maintained separately.
 
 Operational notes, deployment configuration and the audit trail are maintained privately and are not part of this repository.
+
+
+Cluster readings retain cluster boundaries under public display names configured
+with `PUBLIC_CLUSTER_ALIASES` (`private-key=Public label`, comma separated).
+Unmapped clusters receive neutral labels; upstream cluster and machine names are
+never returned. `PUBLIC_NODE_ALIASES` continues to control node display names.
+The fleet instrument groups nodes by cluster and retains keyboard focus and
+scroll position while readings refresh. Job Scout is featured within Public tools;
+Platen and Jev Playground remain neighboring destinations.

@@ -2247,17 +2247,32 @@ body.survey-view #nearby {
    Four machines have to fit inside the orbit panel's live column, so every
    line is one line. */
 .node-grid {
-  display: grid;
-  /* Two columns wherever there is room, so four machines are one glance
-     rather than a scroll. */
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 7px 10px;
   margin: 9px 0 0;
-  padding: 0;
+  padding: 0 4px 0 0;
   max-height: 216px;
   overflow-y: auto;
+}
+.node-cluster + .node-cluster { margin-top: 14px; }
+.node-cluster h3 {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.node-cluster h3 span { color: #aec7bd; font-weight: 400; }
+.cluster-nodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 7px 10px;
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
+.orbit-neighbors button.featured-project { border-color: var(--body-color); grid-column: 1 / -1; }
+.orbit-neighbors button.featured-project small { margin-left: auto; color: var(--ink); font-size: 10px; }
 .node-card {
   padding: 6px 8px 7px;
   background: #a5d9be0c;
@@ -2332,10 +2347,8 @@ body.survey-view #nearby {
 @media (max-width: 760px) {
   /* One machine per row: a phone has the width for the whole line and not
      enough for two of them. */
-  .node-grid {
-    grid-template-columns: 1fr;
-    max-height: 190px;
-  }
+  .node-grid { max-height: 190px; }
+  .cluster-nodes { grid-template-columns: 1fr; }
 }
 
 .orbit-live .node-status {
