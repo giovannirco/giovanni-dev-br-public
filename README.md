@@ -8,9 +8,23 @@ Choose **Take the controls** to start. W accelerates, S brakes, A/D steer, and S
 
 Orbit notes and COMM are translucent instruments; opening them keeps the scene moving. COMM supports streamed Markdown, a searchable model selector, Stop and Clear. Nearby metric sources appear on the scanner without entering orbit. Missing readings stay unavailable rather than becoming zero. Reduced-motion and low-graphics settings are available, and chart mode works when WebGL fails.
 
+## The orrery
+
+Career work, public projects and the operating homelab have equal entry points
+on the landing page. Platform engineering covers production operations,
+incident response, networking and delivery. Observability holds the measurement
+work and this site's telemetry. Agent tooling contains MCP servers, reusable
+skills and upstream contributions. Public tools groups Job Scout, Platen and
+Jev Playground; the operating homelab groups its current infrastructure and
+public handbook. BitOps contains its products with their current status.
+
+The chart presents these three starting families first. Each moon tells one story. The Resume station links to the full career record;
+it does not duplicate those families. Keep every destination pair under eight
+simulation seconds when changing the layout.
+
 ## Develop
 
-Use Node 22 or newer:
+Use Node 24 (the container and CI runtime):
 
 ```sh
 npm ci
@@ -30,9 +44,8 @@ The server listens on port 8080. Configuration comes from process environment va
 | `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL` | OpenAI-compatible chat endpoint, credential and default model |
 | `CHAT_MODELS` | Comma-separated public model allowlist |
 | `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION`, `WAHA_BEACON_CHAT_ID` | Server-side notification transport and destination |
-| `MIMIR_URL`, `MIMIR_TENANT` | Read-only site, cluster and uptime-monitor metrics |
+| `MIMIR_URL`, `MIMIR_TENANT` | Read-only site, multi-cluster, uptime and Job Scout aggregate metrics |
 | `PUBLIC_NODE_ALIASES` | `real=shown` pairs for the node panel; unmapped machines read as `node-01` |
-| `JOB_SCOUT_URL` | Counts-only project activity feed |
 | `LIGHTNING_ADDRESS`, `BTCPAY_URL` | Optional public payment destination |
 | `TRUSTED_PROXY_CIDRS`, `TRUSTED_EDGE_CIDRS` | Explicit forwarding-header trust boundaries |
 | `LOG_LEVEL`, `APP_VERSION` | Structured logging level and release identifier |
@@ -40,6 +53,8 @@ The server listens on port 8080. Configuration comes from process environment va
 Deployment addresses belong in private deployment configuration. Credentials belong in a secret manager or runtime Secret references, never committed values. Integrations without configuration are unavailable; the portfolio remains playable. Payment destinations, selected model IDs and configured public metric readings are intentionally visible to visitors. Cluster readings never carry a real machine name: the node panel shows `PUBLIC_NODE_ALIASES` labels, or positional ones when unset. The uptime panel is aggregate-only for the same reason: its upstream series label every reading with the monitor's name, URL and hostname, so each query collapses the whole set to a single number and none may group by, select or return a per-monitor series. A test asserts that of every query rather than trusting the author of the next one.
 
 `test/disclosure.test.mjs` is the boundary this repository is built around: the code is public, the addresses behind it are not. It drives every public route with internal-looking configuration and failing upstreams, and fails if a hostname, port, tenant, credential, machine name or upstream error message reaches a response. Add an integration and add it there. Server-side structured logs do record upstream addresses and are meant for a private log pipeline, not a public one.
+
+Job Scout reads `job_scout_positions` and exporter refresh health from Mimir; the website does not request private listings or need a desk API credential. Cluster identity is retained for deduplication and node joins, then discarded from public payloads. All panels share a four-query concurrency budget.
 
 Bitcoin is exposed only through allowlisted `/api/bitcoin/*` routes. Never point them at bitcoind RPC or expose Fulcrum. Chat has catalog grounding and no live-data tools; upstream model discovery is filtered through the public allowlist. No conversation database is required.
 

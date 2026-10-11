@@ -20,7 +20,6 @@ const PRIVATE = {
   openaiKey: "sk-private-gateway-key",
   mimir: "http://metrics-gateway.observability.svc.cluster.local",
   tenant: "house-tenant",
-  scout: "http://desk.private.invalid:8080",
   waha: "http://10.77.0.9:3000",
   wahaKey: "waha-private-key",
   chat: "5511999999999@c.us",
@@ -62,7 +61,6 @@ before(async () => {
     insight: createInsight({
       mimirUrl: PRIVATE.mimir,
       mimirTenant: PRIVATE.tenant,
-      scoutUrl: PRIVATE.scout,
       fetchImpl: exploding("metrics"),
     }),
     beacon: createBeacon({

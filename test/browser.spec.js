@@ -52,7 +52,7 @@ async function mockAPI(page, offline = false) {
         destinations: [{ body: "homelab", docks: 7 }, { body: "resume", docks: 4 }],
         opened: [{ body: "homelab", reads: 12 }, { body: "resume", reads: 5 }],
       },
-      "/api/insight/lab": { nodes: 4, pods: 269, cores: 144, namespaces: 100 },
+      "/api/insight/lab": { clusters: 2, nodes: 4, pods: 269, cores: 144, namespaces: 100 },
       "/api/insight/nodes": {
         nodes: [
           { name: "worker-01", ready: true, cores: 8, cpu: 0.19, memoryUsed: 12e9, memoryTotal: 33e9, pods: 108 },
@@ -63,7 +63,7 @@ async function mockAPI(page, offline = false) {
         ],
         updatedAt: new Date().toISOString(),
       },
-      "/api/insight/scout": { configured: true, tracked: 251, lastMovement: new Date(Date.now() - 26 * 60_000).toISOString() },
+      "/api/insight/scout": { configured: true, tracked: 251, updatedAt: new Date(Date.now() - 26 * 60_000).toISOString() },
       "/api/bitcoin/mempool": { count: 42, vsize: 2500000 },
       "/api/bitcoin/fees": { fastestFee: 0, halfHourFee: 1, hourFee: 1 },
       "/api/tip": { lightningAddress: "", btcpayUrl: "" },
@@ -239,6 +239,32 @@ test("manual flight, brake, pause, map and input focus work", async ({
   );
   expect(overflow).toBe(false);
 });
+test("career, public projects and homelab have equal preview entry points", async ({ page }) => {
+  let pings = 0;
+  await mockAPI(page);
+  await page.route("**/api/launch", (route) => {
+    pings++;
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.goto("/");
+  const paths = page.locator(".intro-paths button");
+  await expect(paths).toHaveCount(3);
+  const widths = [];
+  for (const id of ["platform", "workshop", "homelab"]) {
+    const button = page.locator(`[data-chart-focus="${id}"]`);
+    await expect(button).toBeInViewport();
+    widths.push((await button.boundingBox()).width);
+    await button.click();
+    await expect(page.locator(`#chart-filters [data-focus="${id}"]`)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(`#chart-destinations [data-id="${id}"]`)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(button).toBeFocused();
+  }
+  expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1);
+  expect(pings).toBe(0);
+  await expect(page.locator("body")).not.toHaveClass(/flying/);
+});
+
 test("WebGL failure retains chart stories, honest offline data, tips and resume", async ({
   page,
 }) => {
@@ -258,7 +284,7 @@ test("WebGL failure retains chart stories, honest offline data, tips and resume"
   );
   await page.locator("#fallback-chart").click();
   await page.locator('#chart-destinations [data-id="platform"]').click();
-  await expect(page.locator("#dossier-title")).toHaveText("Platform");
+  await expect(page.locator("#dossier-title")).toHaveText("Platform engineering");
   await page.locator("#undock").click();
   await page.locator("#bitcoin-toggle").click();
   await expect(page.locator("#bitcoin-state")).toHaveText("OFFLINE");
@@ -286,7 +312,7 @@ test("reduced motion docks without an animated transit; unavailable storage is o
   await expect(page.locator("#launch")).toBeEnabled();
   await visit(page, "homelab");
   await expect(page.locator("#visited-count")).toHaveText("01");
-  await expect(page.locator("#station-title")).toHaveText("Homelab");
+  await expect(page.locator("#station-title")).toHaveText("Operating homelab");
   await expect(page.locator("#dossier")).not.toBeVisible();
 });
 test("resume works with JavaScript disabled", async ({ browser }) => {
@@ -389,7 +415,7 @@ test("orbit COMM streams safe Markdown, keeps scope history, stops and closes", 
   ).toBe(true);
 });
 
-test("Resume chart focuses its four moons and notes leave orbit intact", async ({
+test("Platform chart focuses its four moons and notes leave orbit intact", async ({
   page,
 }, testInfo) => {
   await mockAPI(page);
@@ -397,15 +423,14 @@ test("Resume chart focuses its four moons and notes leave orbit intact", async (
   await page.goto("/");
   await page.locator("#launch").click();
   await page.locator("#map-toggle").click();
-  await page.locator('#chart-filters [data-focus="resume"]').click();
+  await page.locator('#chart-filters [data-focus="platform"]').click();
   await expect(page.locator("#chart-svg .chart-node")).toHaveCount(5);
   await expect(page.locator("#chart-destinations .moon-dest")).toHaveCount(4);
-  await page.screenshot({ path: testInfo.outputPath("resume-chart.png") });
-  await page.locator('#chart-destinations [data-id="ai-enablement"]').click();
-  await expect(page.locator("#station-title")).toHaveText("AI enablement");
+  await page.screenshot({ path: testInfo.outputPath("platform-chart.png") });
+  await page.locator('#chart-destinations [data-id="argo"]').click();
+  await expect(page.locator("#station-title")).toHaveText("Argo CD");
   await page.locator("#station-notes").click();
-  await expect(page.locator("#orbit-notes")).toContainText("MCP");
-  await expect(page.locator("#orbit-notes")).not.toContainText("Exodus");
+  await expect(page.locator("#orbit-notes")).toContainText("GitOps");
   await expect(page.locator("dialog:modal")).toHaveCount(0);
   await expect(page.locator("#dossier")).toBeHidden();
   await page.locator("#station-notes").click();
@@ -420,7 +445,7 @@ test("orbit info appears immediately and notes and COMM keep the world moving", 
   await page.goto("/");
   await visit(page, "homelab");
   await expect(page.locator(".orbit-summary")).toContainText(
-    "bare-metal Talos",
+    "Talos clusters",
   );
   // Assert the chips render rather than pinning one string: OpenEBS was a
   // homelab topic until storage became its own moon, and a hardcoded tag
@@ -431,7 +456,7 @@ test("orbit info appears immediately and notes and COMM keep the world moving", 
   await expect(page.locator("#orbit-notes")).toBeHidden();
   await page.locator("#station-notes").click();
   await expect(page.locator("#orbit-notes")).toBeVisible();
-  await expect(page.locator("#orbit-notes-title")).toHaveText("Homelab");
+  await expect(page.locator("#orbit-notes-title")).toHaveText("Operating homelab");
   await expect(page.locator("#station-undock")).toBeInViewport();
   await expect(page.locator("dialog:modal")).toHaveCount(0);
   const notesHeading = await headingDeg(page);
@@ -647,19 +672,19 @@ test("orbit readings refresh, recover, tick and stop fetching after departure", 
     reads++;
     return route.fulfill(reads === 2
       ? { status: 502, json: { error: "unavailable" } }
-      : { json: { nodes: reads === 1 ? 4 : 5, pods: null, cores: 0, namespaces: 63 } });
+      : { json: { clusters: 2, nodes: reads === 1 ? 4 : 5, pods: null, cores: 0, namespaces: 63 } });
   });
   await page.goto("/");
   await page.locator("#launch").click();
-  await visit(page, "lab-grafana");
+  await visit(page, "homelab");
   const live = page.locator(".orbit-live");
   await expect(live).toContainText("Received");
-  await expect(live.locator("dd")).toHaveText(["4", "—", "0", "63"]);
+  await expect(live.locator("dd")).toHaveText(["2", "4", "—", "0", "63"]);
   await page.clock.fastForward(31_000);
   await expect(live).toContainText("Readings unavailable");
   await expect(live).toHaveClass(/stale/);
   await page.clock.fastForward(31_000);
-  await expect(live.locator("dd")).toHaveText(["5", "—", "0", "63"]);
+  await expect(live.locator("dd")).toHaveText(["2", "5", "—", "0", "63"]);
   await expect(live).not.toHaveClass(/stale/);
   await visit(page, "bitcoin");
   const clock = live.locator("dd").nth(2);
@@ -685,7 +710,7 @@ test("a delayed reading cannot populate another orbit", async ({ page }) => {
   });
   await page.goto("/");
   await page.locator("#launch").click();
-  await visit(page, "lab-grafana");
+  await visit(page, "homelab");
   await expect(page.locator(".orbit-live")).toContainText("Connecting");
   await visit(page, "scout");
   await expect(page.locator(".orbit-live")).toContainText("251");
@@ -989,10 +1014,10 @@ test("reopening an orbit keeps the original cached reading age", async ({ page }
   await page.route("**/api/insight/lab", async route => { reads++; await route.fallback(); });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await visit(page, "lab-grafana");
+  await visit(page, "homelab");
   await expect(page.locator(".orbit-live")).toContainText("Received");
   await page.clock.setFixedTime(new Date(Date.now() + 10000));
-  await visit(page, "lab-grafana");
+  await visit(page, "homelab");
   await expect(page.locator(".orbit-live .live-freshness")).toContainText(/Received 1\ds ago/);
   expect(reads).toBe(1);
 });

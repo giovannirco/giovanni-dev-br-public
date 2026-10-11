@@ -1,7 +1,7 @@
 import { createReadCache, upstreamJson } from "./upstream.mjs";
-// Live readings for the instrument panels. Two in-cluster sources, both read
-// only: Mimir for the site's own telemetry and the homelab cluster, and the
-// Job Scout desk for counts.
+// Read-only instrument panels backed by a shared metrics store. Cluster
+// identity is retained while deduplicating and joining, then discarded before
+// returning public readings. Job Scout contributes aggregate metrics only.
 //
 // Nothing here forwards a raw upstream body to the browser. Every field is
 // picked and coerced, so a change upstream cannot start publishing something
@@ -58,13 +58,14 @@ export const SITE_QUERIES = {
 const TOP_NOTES = "topk(5, sum by (body) (increase(orrery_notes_opened_total[7d])))";
 
 export const LAB_QUERIES = {
-  nodes: "count(max by (node) (kube_node_info))",
-  pods: 'sum(max by (namespace, pod) (kube_pod_status_phase{phase="Running"}))',
-  cores: 'sum(max by (node) (kube_node_status_capacity{resource="cpu"}))',
+  clusters: "count(count by (cluster) (kube_node_info))",
+  nodes: "count(max by (cluster, node) (kube_node_info))",
+  pods: 'sum(max by (cluster, namespace, pod) (kube_pod_status_phase{phase="Running"}))',
+  cores: 'sum(max by (cluster, node) (kube_node_status_capacity{resource="cpu"}))',
   // Every namespace, not only the ones that happen to hold a pod. The panel
   // read 64 while the cluster had 100, because the old query counted
   // namespaces with pod records.
-  namespaces: 'count(max by (namespace) (kube_namespace_status_phase{phase="Active"}) == 1)',
+  namespaces: 'count(max by (cluster, namespace) (kube_namespace_status_phase{phase="Active"}) == 1)',
 };
 
 // Uptime Kuma watches a few dozen services. Every series it exports carries
@@ -86,14 +87,14 @@ export const LAB_QUERIES = {
 // a set of 88. monitor_id is an integer with no meaning outside the metrics
 // store, so grouping by it deduplicates without naming anything.
 export const WATCH_QUERIES = {
-  monitors: "count(count by (monitor_id) (monitor_status))",
-  up: "count(count by (monitor_id) (monitor_status == 1))",
-  down: "count(count by (monitor_id) (monitor_status == 0))",
-  uptime30d: 'quantile(0.5, max by (monitor_id) (monitor_uptime_ratio{window="30d"}))',
-  response: 'quantile(0.5, max by (monitor_id) (monitor_response_time_seconds{window="1d"}))',
+  monitors: "count(count by (cluster, monitor_id) (monitor_status))",
+  up: "count(count by (cluster, monitor_id) (monitor_status == 1))",
+  down: "count(count by (cluster, monitor_id) (monitor_status == 0))",
+  uptime30d: 'quantile(0.5, max by (cluster, monitor_id) (monitor_uptime_ratio{window="30d"}))',
+  response: 'quantile(0.5, max by (cluster, monitor_id) (monitor_response_time_seconds{window="1d"}))',
   // Expired and not-yet-issued certificates report zero or less; excluding
   // them keeps this reading "soonest real expiry" rather than a constant zero.
-  certDays: "min(min by (monitor_id) (monitor_cert_days_remaining > 0))",
+  certDays: "min(min by (cluster, monitor_id) (monitor_cert_days_remaining > 0))",
 };
 
 // Each gauge describes the same full node. max collapses duplicate collectors
@@ -112,22 +113,27 @@ export const BITCOIN_QUERIES = {
 // In particular, Tetragon's event node label can be absent, so it cannot be
 // used as the identity of the observer. Only the final scalar leaves Mimir.
 const observerRate = (metric, window) =>
-  `sum(max by (instance) (sum by (job, instance) (rate(${metric}[${window}]))))`;
+  `sum(max by (cluster, instance) (sum by (cluster, job, instance) (rate(${metric}[${window}]))))`;
 export const NETWORK_QUERIES = {
   flowsPerSecond: observerRate("hubble_flows_processed_total", "5m"),
   dropsPerSecond: observerRate("hubble_drop_total", "1h"),
   eventsPerSecond: observerRate("tetragon_events_total", "5m"),
   // This gauge counts endpoints in each enforcement state, not policies.
   // Audit-only endpoints do not enforce; ingress, egress or both do.
-  enforcedEndpoints: 'sum(max by (node, enforcement) (cilium_policy_endpoint_enforcement_status{enforcement=~"both|ingress|egress"}))',
-  endpoints: "sum(max by (node, enforcement) (cilium_policy_endpoint_enforcement_status))",
+  enforcedEndpoints: 'sum(max by (cluster, node, enforcement) (cilium_policy_endpoint_enforcement_status{enforcement=~"both|ingress|egress"}))',
+  endpoints: "sum(max by (cluster, node, enforcement) (cilium_policy_endpoint_enforcement_status))",
+};
+
+export const SCOUT_QUERIES = {
+  tracked: "sum(max by (cluster, status) (job_scout_positions))",
+  refreshErrors: "max(job_scout_metrics_db_refresh_errors)",
 };
 
 export const NODE_QUERIES = {
   inventory: "kube_node_info",
   ready: 'kube_node_status_condition{condition="Ready"} == 1',
   cores: 'kube_node_status_capacity{resource="cpu"}',
-  cpu: '1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))',
+  cpu: '1 - avg by (cluster, instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))',
   memoryTotal: "node_memory_MemTotal_bytes",
   // Available, not free: free memory ignores reclaimable cache and would make
   // every healthy Linux box look full.
@@ -166,12 +172,19 @@ function positional(index) {
 
 // Several collectors can report the same node; take one value per node rather
 // than summing duplicates into a number twice as large as the truth.
+function nodeKey(metric, label = "node") {
+  const name = String(metric?.[label] || "");
+  const cluster = String(metric?.cluster || "");
+  if (!NODE_NAME.test(name) || cluster.length > 128 || cluster.includes("\0")) return null;
+  return `${cluster}\0${name}`;
+}
+
 function byNode(rows, label = "node") {
   const out = new Map();
   for (const row of rows || []) {
-    const key = String(row?.metric?.[label] || "");
+    const key = nodeKey(row?.metric, label);
     const value = num(row?.value?.[1]);
-    if (!NODE_NAME.test(key) || value === null) continue;
+    if (key === null || value === null) continue;
     const seen = out.get(key);
     if (seen === undefined || value > seen) out.set(key, value);
   }
@@ -183,7 +196,6 @@ const TOP_DESTINATIONS = "topk(5, sum by (body) (increase(orrery_docks_total[7d]
 export function createInsight({
   mimirUrl = process.env.MIMIR_URL || "",
   mimirTenant = process.env.MIMIR_TENANT || "anonymous",
-  scoutUrl = process.env.JOB_SCOUT_URL || "",
   nodeAliases = process.env.PUBLIC_NODE_ALIASES || "",
   fetchImpl = fetch,
   cacheMs = CACHE_MS,
@@ -192,7 +204,23 @@ export function createInsight({
   const cached = createReadCache({ ttlMs: cacheMs, now });
   const aliases = parseNodeAliases(nodeAliases);
 
+  // All panels share this budget. A cold site read alone has seventeen
+  // queries; overlapping panels otherwise exhaust small Mimir query queues.
+  let activeQueries = 0;
+  const waitingQueries = [];
   async function promql(query) {
+    if (activeQueries >= 4) await new Promise(resolve => waitingQueries.push(resolve));
+    else activeQueries++;
+    try {
+      return await queryMetrics(query);
+    } finally {
+      const next = waitingQueries.shift();
+      if (next) next();
+      else activeQueries--;
+    }
+  }
+
+  async function queryMetrics(query) {
     if (!mimirUrl) throw fail(503, "metrics unconfigured");
     const url = `${mimirUrl.replace(/\/$/, "")}/prometheus/api/v1/query?query=${encodeURIComponent(query)}`;
     const response = await fetchImpl(url, {
@@ -268,6 +296,7 @@ export function createInsight({
     return cached("lab", async () => {
       const raw = await scalars(LAB_QUERIES);
       return {
+        clusters: round(raw.clusters),
         nodes: round(raw.nodes),
         pods: round(raw.pods),
         cores: round(raw.cores),
@@ -277,25 +306,17 @@ export function createInsight({
     });
   }
 
-  // Counts only. The desk holds private job-search data and none of it,
-  // including company names, titles and application status, is public.
+  // The authenticated desk API holds private records. Its metrics exporter
+  // already reports counts; aggregate them inside Mimir instead of requesting
+  // even one private listing. A failed exporter refresh invalidates the count.
   async function scout() {
-    if (!scoutUrl) return { configured: false };
+    if (!mimirUrl) return { configured: false };
     return cached("scout", async () => {
-      const response = await fetchImpl(
-        `${scoutUrl.replace(/\/$/, "")}/api/v1/positions?pageSize=1`,
-        { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8000) },
-      );
-      if (!response.ok) throw fail(502, "desk unavailable");
-      const body = await upstreamJson(response);
-      const lastMovement = body?.data?.[0]?.updatedAt;
+      const raw = await scalars(SCOUT_QUERIES);
       return {
         configured: true,
-        tracked: round(body?.meta?.total),
-        lastMovement:
-          typeof lastMovement === "string" && lastMovement.length <= 40
-            ? lastMovement
-            : null,
+        tracked: raw.refreshErrors === 0 && raw.tracked !== null && raw.tracked >= 0
+          ? round(raw.tracked) : null,
         updatedAt: new Date(now()).toISOString(),
       };
     });
@@ -319,9 +340,9 @@ export function createInsight({
       const names = [...byNode(inventory).keys()].sort();
       const readyNodes = new Map();
       for (const row of ready) {
-        const name = row.metric?.node;
+        const name = nodeKey(row.metric);
         const status = row.metric?.status;
-        if (!NODE_NAME.test(name || "") || num(row.value?.[1]) !== 1 || !["true", "false", "unknown"].includes(status)) continue;
+        if (name === null || num(row.value?.[1]) !== 1 || !["true", "false", "unknown"].includes(status)) continue;
         const statuses = readyNodes.get(name) || new Set();
         statuses.add(status);
         readyNodes.set(name, statuses);
@@ -340,7 +361,7 @@ export function createInsight({
           const statuses = readyNodes.get(name);
           const status = statuses?.size === 1 ? [...statuses][0] : "unknown";
           return {
-            name: aliases.get(name) || positional(index),
+            name: aliases.get(name.split("\0")[1]) || positional(index),
             ready: status === "true" ? true : status === "false" ? false : null,
             cores: round(coreCounts.get(name) ?? null),
             cpu: busy.has(name) ? round(Math.min(Math.max(busy.get(name), 0), 1), 4) : null,
