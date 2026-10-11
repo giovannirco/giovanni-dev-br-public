@@ -138,7 +138,7 @@ const MOON_FORMS = {
       loop.rotation.z = i * 0.9;
     }
   },
-  // AI enablement
+  // Agent tooling
   "observe-mcp": ({ rotor, r, accent, dark, pale }) => {
     const prism = mesh(rotor, new THREE.CylinderGeometry(0, r * 1.05, r * 1.7, 3), dark);
     prism.rotation.z = 0.28;
@@ -167,6 +167,41 @@ const MOON_FORMS = {
       mesh(card, new THREE.BoxGeometry(0.02, r * 0.36, r * 0.8), pale, (i - 3) * r * 0.24);
     mesh(card, new THREE.BoxGeometry(r * 0.5, r * 0.08, r * 0.5), accent, r * 0.6, r * 0.28);
   },
+  "interview-skills": ({ rotor, r, accent, dark, pale }) => {
+    for (const sign of [-1, 1]) {
+      const leaf = mesh(rotor, new THREE.BoxGeometry(r * 0.95, r * 1.5, r * 0.18), dark,
+        sign * r * 0.5);
+      leaf.rotation.y = sign * -0.25;
+      for (let i = 0; i < 3; i++)
+        mesh(leaf, new THREE.BoxGeometry(r * 0.65, 0.03, 0.03), i === 0 ? accent : pale,
+          0, (i - 1) * r * 0.35, r * 0.11);
+    }
+  },
+  "ai-memory": ({ rotor, r, accent, pale }) => {
+    for (let i = 0; i < 3; i++) {
+      const loop = ring(rotor, r * (0.65 + i * 0.28), 0.035, pale, i * 0.8);
+      mesh(loop, new THREE.OctahedronGeometry(r * 0.2), accent, r * (0.65 + i * 0.28));
+    }
+  },
+  platen: ({ rotor, r, accent, dark, pale }) => {
+    mesh(rotor, new THREE.BoxGeometry(r * 1.7, r * 0.55, r * 1.3), dark);
+    for (let i = 0; i < 3; i++)
+      mesh(rotor, new THREE.BoxGeometry(r * 1.1, r * 0.07, r * 1.5), i === 2 ? accent : pale,
+        0, r * (0.36 + i * 0.14), i * r * 0.15);
+  },
+  "jev-playground": ({ rotor, r, accent, pale }) => {
+    for (const sign of [-1, 1]) {
+      const loop = ring(rotor, r * 0.82, 0.035, accent, 0.65);
+      loop.position.x = sign * r * 0.55;
+      mesh(rotor, new THREE.SphereGeometry(r * 0.25, 12, 8), pale, sign * r * 0.55);
+    }
+  },
+  handbook: ({ rotor, r, accent, dark, pale }) => {
+    mesh(rotor, new THREE.BoxGeometry(r * 1.4, r * 1.8, r * 0.5), dark);
+    mesh(rotor, new THREE.BoxGeometry(r * 1.15, r * 1.55, r * 0.52), pale);
+    for (let i = 0; i < 3; i++)
+      mesh(rotor, new THREE.BoxGeometry(r * 0.8, 0.035, 0.02), accent, 0, (i - 1) * r * 0.38, r * 0.28);
+  },
   // Observability
   cardinality: ({ rotor, r, accent, pale }) => {
     for (let i = 0; i < 5; i++)
@@ -188,13 +223,13 @@ const MOON_FORMS = {
     }
   },
   // Homelab
-  fulcrum: ({ rotor, r, accent, dark, pale }) => {
+  talos: ({ rotor, r, accent, dark, pale }) => {
     mesh(rotor, new THREE.CylinderGeometry(r * 0.16, r * 0.16, r * 2.3, 8), pale);
     for (let i = 0; i < 4; i++)
       mesh(rotor, new THREE.CylinderGeometry(r * (1.05 - i * 0.14), r * (1.05 - i * 0.14), r * 0.09, 18),
         i % 2 ? dark : accent, 0, (i - 1.5) * r * 0.5);
   },
-  "lab-grafana": ({ rotor, r, accent, dark, pale }) => {
+  "cpa-prometheus": ({ rotor, r, accent, dark, pale }) => {
     const dish = mesh(rotor, new THREE.SphereGeometry(r * 1.1, 16, 10, 0, TAU, 0, Math.PI / 2.4), pale);
     dish.rotation.x = -0.7;
     dish.material.side = THREE.DoubleSide;
@@ -203,12 +238,11 @@ const MOON_FORMS = {
   },
 };
 
-// BitOps practices are shards of the parent crystal, but each a different one.
+// BitOps products share the parent crystal, each with a distinct cut.
 const BITOPS_SHARDS = {
-  "bitops-kubernetes": [6, 1.5],
-  "bitops-gitops": [4, 1.2],
-  "bitops-observe": [8, 0.9],
-  "bitops-mcp": [3, 1.8],
+  planoadentro: [6, 1.5],
+  "seguros-mcp": [4, 1.2],
+  navalha: [3, 1.8],
 };
 
 function makeBody(spec, texture) {
@@ -259,7 +293,7 @@ function makeBody(spec, texture) {
       mesh(arm, new THREE.BoxGeometry(0.2, 1.4, 0.2), dark, 0, 0.7);
       mesh(arm, new THREE.BoxGeometry(0.65, 0.32, 0.5), pale, 0, 1.35);
     }
-  } else if (spec.parent === "resume") {
+  } else if (spec.id === "production-ops" || spec.id === "incident-response") {
     mesh(rotor, new THREE.OctahedronGeometry(r * 0.48), accent);
     if (spec.id === "production-ops") {
       for (let i = 0; i < 3; i++) {
@@ -290,30 +324,6 @@ function makeBody(spec, texture) {
         const wave = ring(rotor, r * (0.7 + i * 0.35), 0.025, accent);
         wave.position.y = (i - 1) * r * 0.5;
       }
-    } else if (spec.id === "ai-enablement") {
-      for (let i = 0; i < 3; i++) {
-        const loop = ring(rotor, r * 1.4, 0.035, pale, (i * Math.PI) / 3);
-        loop.rotation.y = (i * Math.PI) / 3;
-        mesh(loop, new THREE.OctahedronGeometry(r * 0.22), accent, r * 1.4);
-      }
-    } else {
-      for (const sign of [-1, 1]) {
-        const arm = mesh(
-          rotor,
-          new THREE.BoxGeometry(r * 0.25, r * 2.3, r * 0.4),
-          pale,
-          sign * r * 0.8,
-        );
-        arm.rotation.z = sign * -0.35;
-        mesh(
-          arm,
-          new THREE.BoxGeometry(r * 0.8, r * 0.2, r * 0.4),
-          accent,
-          -sign * r * 0.25,
-          r,
-        );
-      }
-      ring(rotor, r * 1.65, 0.025, accent, 0.35);
     }
     glow(rotor, texture, spec.color, r * 3);
   } else if (
@@ -371,7 +381,7 @@ function makeBody(spec, texture) {
       }
     glow(rotor, texture, spec.color, spec.parent ? 2.3 : 4.2);
   } else if (BITOPS_SHARDS[spec.id]) {
-    // Shards of the parent crystal, a different cut for each practice.
+    // A different cut for each product.
     const [faces, stretch] = BITOPS_SHARDS[spec.id];
     const shard = mesh(
       rotor,
@@ -475,10 +485,18 @@ function makeBody(spec, texture) {
         Math.sin(a) * 1.8,
       );
     }
-  } else if (spec.id === "rubinot") {
-    mesh(rotor, new THREE.IcosahedronGeometry(r * 0.75, 1), light("#d97c3a"));
-    rock(rotor, r, "#a98147", 1, 8);
-    ring(rotor, r * 1.9, 0.012, accent, 1.25);
+  } else if (spec.id === "workshop") {
+    // An open fabrication hub: workpieces around a central spindle.
+    mesh(rotor, new THREE.CylinderGeometry(r * 0.7, r * 0.9, r * 0.35, 6), dark);
+    mesh(rotor, new THREE.CylinderGeometry(r * 0.12, r * 0.2, r * 1.5, 8), pale);
+    for (let i = 0; i < 3; i++) {
+      const a = (i * TAU) / 3;
+      const piece = mesh(rotor, new THREE.BoxGeometry(r * 0.6, r * 0.35, r * 0.8), pale,
+        Math.cos(a) * r * 1.15, r * 0.3, Math.sin(a) * r * 1.15);
+      piece.rotation.y = -a;
+      mesh(piece, new THREE.BoxGeometry(r * 0.4, 0.03, r * 0.6), accent, 0, r * 0.19);
+    }
+    ring(rotor, r * 1.65, 0.025, accent);
   } else if (spec.id === "scout") {
     mesh(
       rotor,
@@ -503,7 +521,7 @@ function makeBody(spec, texture) {
         );
     }
     ring(rotor, r * 1.6, 0.025, accent, 0.3);
-  } else if (spec.id === "bitcoin" || spec.id === "fulcrum") {
+  } else if (spec.id === "bitcoin") {
     for (let i = 0; i < 3; i++) {
       const block = mesh(
         rotor,

@@ -43,21 +43,21 @@ test("homelab and at least two other planets carry honest moons", () => {
   assert.ok(parents.has("ai"));
   assert.ok(parents.has("bitops"));
   assert.equal(byId.bitcoin.parent, "homelab");
-  assert.equal(byId.fulcrum.parent, "homelab");
-  assert.equal(byId.rubinot.parent, "homelab");
   assert.equal(byId.envoy.parent, "homelab");
   assert.equal(byId.storage.parent, "homelab");
   assert.equal(byId.cnpg.parent, "homelab");
   assert.equal(byId.cilium.parent, "platform");
   assert.equal(byId.argo.parent, "platform");
-  // The MCP servers are tools, so they orbit AI enablement rather than the
+  // The MCP servers are tools, so they orbit Agent tooling rather than the
   // Observability planet that happened to be their first subject.
   assert.equal(byId["observe-mcp"].parent, "ai");
   assert.equal(byId["checkly-mcp"].parent, "ai");
   assert.equal(byId["skills-toolkit"].parent, "ai");
-  assert.equal(byId["gpu-lab"].parent, "ai");
-  for (const id of ["kubernetes", "gitops", "observe", "mcp"])
-    assert.equal(byId[`bitops-${id}`].parent, "bitops");
+  assert.equal(byId["gpu-lab"].parent, "homelab");
+  for (const id of ["planoadentro", "seguros-mcp", "navalha"])
+    assert.equal(byId[id].parent, "bitops");
+  for (const id of ["scout", "platen", "jev-playground"])
+    assert.equal(byId[id].parent, "workshop");
   for (const moon of moons) {
     assert.ok(byId[moon.parent], moon.parent);
     assert.ok(moon.orbit < 12, `${moon.id} moon orbit too wide`);
@@ -436,7 +436,7 @@ test("signal buoys collect on contact and do not invent extra catalog claims", (
 });
 
 test("the scanner ranks metric emitters by surface distance, not by centre", () => {
-  const emitters = new Set(["bitcoin", "lab-grafana", "talos", "metrics"]);
+  const emitters = new Set(["bitcoin", "homelab", "talos", "metrics"]);
   const state = makeFlight();
   const bitcoin = bodies.find((b) => b.id === "bitcoin");
   Object.assign(state, park(bitcoin));

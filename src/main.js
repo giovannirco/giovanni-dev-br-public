@@ -15,7 +15,7 @@ const emblems = {
   observe: "⌁",
   homelab: "▤",
   bitops: "◇",
-  rubinot: "✧",
+  workshop: "✧",
   scout: "⌖",
   bitcoin: "₿",
   survey: "✺",
@@ -23,8 +23,6 @@ const emblems = {
   argo: "⎇",
   "observe-mcp": "⌁",
   "checkly-mcp": "▣",
-  fulcrum: "▅",
-  "lab-grafana": "▦",
 };
 let visited = new Set();
 let collected = new Set();
@@ -300,9 +298,10 @@ const LIVE_FEEDS = {
         : null,
     unavailable: "The watch is not reporting right now.",
   },
-  "lab-grafana": {
+  homelab: {
     url: "/api/insight/lab",
     rows: (d) => [
+      ["Clusters", number(d.clusters)],
       ["Nodes", number(d.nodes)],
       ["Pods running", number(d.pods)],
       ["CPU cores", number(d.cores)],
@@ -315,7 +314,7 @@ const LIVE_FEEDS = {
       d.configured
         ? [
             ["Roles tracked", number(d.tracked)],
-            ["Last movement", relativeTime(d.lastMovement)],
+            ["Reading updated", relativeTime(d.updatedAt)],
           ]
         : null,
     unavailable: "The desk is not connected to this site.",
@@ -331,43 +330,7 @@ const LIVE_FEEDS = {
       ["Resume opened · 24h", number(d.resume)],
     ],
   },
-  "metrics-flight": {
-    url: "/api/insight/site",
-    rows: (d) => [
-      ["Flights · 24h", number(d.flights)],
-      ["Avg flight (est.)", finite(d.avgFlightSeconds) ? `${Math.round(d.avgFlightSeconds)}s` : "—"],
-      ["First frame (p50)", finite(d.readyP50) ? `${Math.round(d.readyP50)}ms` : "—"],
-      ["Chart opened · 24h", number(d.charts)],
-      ["No WebGL · 24h", number(d.fallbacks)],
-    ],
-  },
-  "metrics-comm": {
-    url: "/api/insight/site",
-    rows: (d) => [
-      ["COMM opened · 24h", number(d.commOpens)],
-      ["Questions · 24h", number(d.chats)],
-      ["Upstream errors", number(d.chatErrors)],
-      ["Rate limited", number(d.throttled)],
-    ],
-  },
-  "metrics-reading": {
-    url: "/api/insight/site",
-    rows: (d) =>
-      (d.opened || []).slice(0, 5).map((row) => {
-        const spec = catalog.bodies.find((b) => b.id === row.body);
-        return [spec ? spec.name : row.body, number(row.reads)];
-      }),
-    unavailable: "No dossiers opened in the last week.",
-  },
-  "metrics-routes": {
-    url: "/api/insight/site",
-    rows: (d) =>
-      (d.destinations || []).slice(0, 5).map((row) => {
-        const spec = catalog.bodies.find((b) => b.id === row.body);
-        return [spec ? spec.name : row.body, number(row.docks)];
-      }),
-    unavailable: "No orbits recorded in the last week.",
-  },
+
 };
 
 function relativeTime(value) {
@@ -429,7 +392,7 @@ const SCANNER_SOURCES = {
       ["Busiest", busiest ? `${busiest.name.replace(/^k8s-/, "")} ${Math.round(busiest.cpu * 100)}%` : "—"],
     ];
   },
-  "lab-grafana": (d) => [
+  homelab: (d) => [
     ["Nodes", number(d.nodes)],
     ["Pods running", number(d.pods)],
     ["Namespaces", number(d.namespaces)],
@@ -645,6 +608,14 @@ function renderLive(reading) {
     : rows?.length
       ? `<dl>${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(String(value))}</dd></div>`).join("")}</dl>`
       : reading.data ? `<p class="live-note">${esc(reading.feed.unavailable || "No readings yet.")}</p>` : "";
+  // Freshness ticks must not replace an unchanged reading. In particular,
+  // replacing a focused node grid interrupts a keyboard scroll in progress.
+  if (body === reading.renderedBody) {
+    reading.target.querySelector(".eyebrow").textContent = stale ? "LAST READING" : "LIVE READING";
+    reading.target.querySelector(".live-freshness").textContent = status;
+    return;
+  }
+  reading.renderedBody = body;
   const previousGrid = reading.target.querySelector(".node-grid");
   const scrollTop = previousGrid?.scrollTop || 0;
   const restoreFocus = previousGrid && document.activeElement === previousGrid;
@@ -900,6 +871,7 @@ function showFallback(reason) {
   $("#console-toggle").hidden = true;
   document.body.classList.remove("instruments-open");
   $("#map-toggle").disabled = false;
+  document.querySelectorAll("[data-chart-focus]").forEach((button) => { button.disabled = false; });
   $("#quality-toggle").hidden = true;
   $("#camera-toggle").hidden = true;
   $("#overhead-toggle").hidden = true;
@@ -916,6 +888,12 @@ $("#launch").addEventListener("click", () => {
   }).catch(() => {});
   start();
   $("#launch").blur();
+});
+document.querySelectorAll("[data-chart-focus]").forEach((button) => {
+  button.addEventListener("click", () => {
+    chartFocus = button.dataset.chartFocus;
+    openDialog("#chart");
+  });
 });
 $("#map-toggle").addEventListener("click", () => {
   telemetry("chart");
@@ -1371,6 +1349,7 @@ try {
         $("#launch").disabled = false;
         $("#launch").textContent = "Take the controls  ↗";
         $("#map-toggle").disabled = false;
+  document.querySelectorAll("[data-chart-focus]").forEach((button) => { button.disabled = false; });
         $("#quality-toggle").setAttribute("aria-pressed", String(low));
         $("#quality-label").textContent = low
           ? "Full graphics"

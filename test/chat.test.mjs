@@ -33,7 +33,7 @@ test("model discovery exposes only choices, caches requests, and validates the s
       completions++;
       const body = JSON.parse(init.body);
       assert.equal(body.model, "chat-large");
-      assert.match(body.messages[0].content, /CURRENT ORBIT: Homelab/);
+      assert.match(body.messages[0].content, /CURRENT ORBIT: Operating homelab/);
       return Response.json({
         choices: [{ message: { content: "Talos runs here." } }],
       });
@@ -119,7 +119,7 @@ test("orbit grounding includes its moons, excludes other planets and keeps emplo
     assert.equal(facts.includes("Exodus"), body.id === "resume");
   }
   assert.throws(() => chatGrounding(catalog, "unknown"), { status: 400 });
-  assert.equal(catalog.bodies.filter((b) => b.parent === "resume").length, 4);
+  assert.equal(catalog.bodies.filter((b) => b.parent === "platform").length, 4);
   assert.deepEqual(chatMessages("facts", { role: "system" }, "hello"), [
     { role: "system", content: "facts" },
     { role: "user", content: "hello" },
@@ -166,7 +166,7 @@ test("chat endpoint streams scoped content and cancels upstream when the visitor
     fetchImpl: async (_url, init) => {
       const request = JSON.parse(init.body);
       assert.equal(request.stream, true);
-      assert.match(request.messages[0].content, /CURRENT ORBIT: Homelab/);
+      assert.match(request.messages[0].content, /CURRENT ORBIT: Operating homelab/);
       assert.doesNotMatch(request.messages[0].content, /Exodus/);
       upstreamSignal = init.signal;
       return new Response(
@@ -316,8 +316,8 @@ test("public chat is rate limited per caller and by an hourly budget", async () 
 
 test("the AI planet grounds its own moons and stays out of other orbits", () => {
   const ai = chatGrounding(catalog, "ai");
-  assert.match(ai, /CURRENT ORBIT: AI enablement/);
-  for (const moon of ["Observe MCP", "Checkly MCP", "Skills toolkit", "GPU node"])
+  assert.match(ai, /CURRENT ORBIT: Agent tooling/);
+  for (const moon of ["Observe MCP", "Checkly MCP", "Skills toolkit", "Interview Skills", "ai-memory contributions"])
     assert.match(ai, new RegExp(moon), `${moon} missing from AI grounding`);
   // Employment stays on the Resume station only.
   assert.doesNotMatch(ai, /Exodus/);
@@ -325,16 +325,17 @@ test("the AI planet grounds its own moons and stays out of other orbits", () => 
   const gpu = chatGrounding(catalog, "gpu-lab");
   assert.match(gpu, /Scope: this moon only/);
   assert.doesNotMatch(gpu, /Checkly MCP/);
-  // BitOps now carries its four practices.
+  // BitOps grounds its published products and their status.
   const bitops = chatGrounding(catalog, "bitops");
-  for (const practice of ["Kubernetes", "GitOps", "Observability", "MCP enablement"])
+  for (const practice of ["Plano Adentro", "Seguros MCP", "Navalha"])
     assert.match(bitops, new RegExp(practice));
 });
 
 test("every catalog claim traces to a declared source and invents no metrics", () => {
   const added = [
     "ai", "skills-toolkit", "gpu-lab", "envoy", "storage", "cnpg",
-    "bitops-kubernetes", "bitops-gitops", "bitops-observe", "bitops-mcp",
+    "workshop", "platen", "jev-playground", "interview-skills", "ai-memory",
+    "production-ops", "incident-response", "handbook", "cpa-prometheus",
   ];
   const byId = Object.fromEntries(catalog.bodies.map((b) => [b.id, b]));
   for (const id of added) {

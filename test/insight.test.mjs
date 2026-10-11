@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { once } from "node:events";
 import { createApp } from "../server.mjs";
-import { createInsight, SITE_QUERIES, LAB_QUERIES, NODE_QUERIES, WATCH_QUERIES } from "../src/insight.mjs";
+import { createInsight, SITE_QUERIES, LAB_QUERIES, NODE_QUERIES, WATCH_QUERIES, SCOUT_QUERIES } from "../src/insight.mjs";
 
 function promResponse(value) {
   return Response.json({
@@ -64,57 +64,36 @@ test("readings are cached so a busy orbit does not hammer Mimir", async () => {
   assert.ok(calls > first, "cache expires");
 });
 
-test("the Job Scout desk publishes counts and nothing else", async () => {
+test("the Job Scout desk reads only aggregate metrics, never private records", async () => {
+  const asked = [];
   const insight = createInsight({
-    scoutUrl: "http://scout.test",
+    mimirUrl: "https://metrics.test",
     fetchImpl: async (url) => {
-      assert.match(url, /\/api\/v1\/positions\?pageSize=1$/);
-      return Response.json({
-        meta: { total: 251 },
-        data: [
-          {
-            // Everything below is private and must never reach the browser.
-            id: "pos_secret",
-            title: "Senior DevOps Engineer",
-            company: { name: "Some Company" },
-            status: "applied",
-            salaryMin: 180000,
-            primaryUrl: "https://example.com/job",
-            triageOneLiner: "a private note",
-            updatedAt: "2026-09-06T15:32:02.168Z",
-          },
-        ],
-      });
+      assert.equal(new URL(url).pathname, "/prometheus/api/v1/query");
+      const q = new URL(url).searchParams.get("query");
+      asked.push(q);
+      return Response.json({ status: "success", data: { result: [{
+        metric: { company: "Private company", status: "applied", cluster: "internal-cluster" },
+        value: [1, q === SCOUT_QUERIES.tracked ? "251" : "0"],
+      }] } });
     },
   });
   const desk = await insight.scout();
-  assert.deepEqual(Object.keys(desk).sort(), [
-    "configured",
-    "lastMovement",
-    "tracked",
-    "updatedAt",
-  ]);
+  assert.deepEqual(Object.keys(desk).sort(), ["configured", "tracked", "updatedAt"]);
   assert.equal(desk.tracked, 251);
-  const serialised = JSON.stringify(desk);
-  for (const leak of [
-    "Senior DevOps",
-    "Some Company",
-    "applied",
-    "180000",
-    "example.com",
-    "private note",
-    "pos_secret",
-  ])
-    assert.ok(!serialised.includes(leak), `desk leaked ${leak}`);
+  assert.doesNotMatch(JSON.stringify(desk), /Private|applied|internal-cluster/);
+  assert.equal(asked.length, 2);
 });
 
-test("an unconfigured desk says so instead of guessing", async () => {
-  const insight = createInsight({
-    scoutUrl: "",
-    fetchImpl: async () => {
-      throw new Error("must not call");
-    },
-  });
+test("failed or absent desk refreshes never publish a stale or invented count", async () => {
+  for (const refresh of [1, null]) {
+    const insight = createInsight({ mimirUrl: "https://metrics.test", fetchImpl: async (url) => {
+      const q = new URL(url).searchParams.get("query");
+      return promResponse(q === SCOUT_QUERIES.tracked ? 251 : refresh);
+    } });
+    assert.equal((await insight.scout()).tracked, null);
+  }
+  const insight = createInsight({ mimirUrl: "", fetchImpl: async () => { throw new Error("must not call"); } });
   assert.deepEqual(await insight.scout(), { configured: false });
 });
 
@@ -334,8 +313,8 @@ test("no watch query can return a per-monitor series", () => {
     for (const [, labels] of query.matchAll(/\bby\s*\(([^)]*)\)/g)) {
       assert.deepEqual(
         labels.split(",").map((l) => l.trim()),
-        ["monitor_id"],
-        `${key} groups by something other than monitor_id`,
+        ["cluster", "monitor_id"],
+        `${key} groups by something other than cluster and monitor_id`,
       );
     }
     // The outermost call has to be an aggregate, so the result is one series.
@@ -383,4 +362,40 @@ test("a ratio outside 0..1 and a missing reading stay honest", async () => {
   const reading = await empty.watch();
   assert.equal(reading.uptime30d, null);
   assert.equal(reading.monitors, null);
+});
+
+test("same node names in different clusters cannot mix readings or readiness", async () => {
+  const row = (cluster, labels, value) => ({ metric: { cluster, ...labels }, value: [1, String(value)] });
+  const reading = await nodeFeed({
+    kube_node_info: [row("private-a", { node: "worker" }, 1), row("private-b", { node: "worker" }, 1)],
+    kube_node_status_condition: [row("private-a", { node: "worker", status: "true" }, 1), row("private-b", { node: "worker", status: "false" }, 1)],
+    kube_node_status_capacity: [row("private-a", { node: "worker" }, 4), row("private-b", { node: "worker" }, 8)],
+    node_cpu_seconds_total: [row("private-a", { instance: "worker" }, 0.2), row("private-b", { instance: "worker" }, 0.7)],
+    node_memory_MemTotal_bytes: [row("private-a", { instance: "worker" }, 100), row("private-b", { instance: "worker" }, 200)],
+    node_memory_MemAvailable_bytes: [row("private-a", { instance: "worker" }, 80)],
+    kubelet_running_pods: [row("private-a", { node: "worker" }, 3), row("private-a", { node: "worker" }, 3), row("private-b", { node: "worker" }, 7)],
+  }).nodes();
+  assert.deepEqual(reading.nodes, [
+    { name: "node-01", ready: true, cores: 4, cpu: 0.2, memoryUsed: 20, memoryTotal: 100, pods: 3 },
+    { name: "node-02", ready: false, cores: 8, cpu: 0.7, memoryUsed: null, memoryTotal: 200, pods: 7 },
+  ]);
+  assert.doesNotMatch(JSON.stringify(reading), /private-|worker/);
+});
+
+test("cold panels share a bounded metrics query budget and release slots on failure", async () => {
+  let active = 0, peak = 0, calls = 0;
+  const insight = createInsight({ mimirUrl: "https://metrics.test", fetchImpl: async () => {
+    const call = ++calls;
+    active++; peak = Math.max(peak, active);
+    await new Promise(resolve => setTimeout(resolve, 2));
+    active--;
+    if (call === 1) throw new Error("one failed query");
+    return promResponse(0);
+  } });
+  const results = await Promise.allSettled([insight.site(), insight.lab(), insight.nodes(), insight.watch(), insight.scout()]);
+  assert.equal(results[0].status, "rejected");
+  for (const result of results.slice(1)) assert.equal(result.status, "fulfilled");
+  assert.ok(peak <= 4, `upstream concurrency was ${peak}`);
+  assert.ok(calls > 20, "all queued panels were exercised");
+  assert.equal(active, 0);
 });

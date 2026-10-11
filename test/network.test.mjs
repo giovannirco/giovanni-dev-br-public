@@ -3,8 +3,8 @@ import { test } from "node:test";
 import { createInsight, NETWORK_QUERIES } from "../src/insight.mjs";
 
 test("every network query returns a scalar and discards workload labels before deduplicating collectors", () => {
-  const rate = /^sum\(max by \(instance\) \(sum by \(job, instance\) \(rate\((hubble_flows_processed_total\[5m\]|hubble_drop_total\[1h\]|tetragon_events_total\[5m\])\)\)\)\)$/;
-  const endpoints = /^sum\(max by \(node, enforcement\) \(cilium_policy_endpoint_enforcement_status(?:\{enforcement=~"both\|ingress\|egress"\})?\)\)$/;
+  const rate = /^sum\(max by \(cluster, instance\) \(sum by \(cluster, job, instance\) \(rate\((hubble_flows_processed_total\[5m\]|hubble_drop_total\[1h\]|tetragon_events_total\[5m\])\)\)\)\)$/;
+  const endpoints = /^sum\(max by \(cluster, node, enforcement\) \(cilium_policy_endpoint_enforcement_status(?:\{enforcement=~"both\|ingress\|egress"\})?\)\)$/;
   for (const [key, query] of Object.entries(NETWORK_QUERIES)) {
     assert.ok(rate.test(query) || endpoints.test(query), `${key} can return unexpected labels or change the aggregation boundary`);
     assert.doesNotMatch(query, /namespace|pod|workload|binary|source|destination|without/);
