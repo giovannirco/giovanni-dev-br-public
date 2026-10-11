@@ -1233,3 +1233,23 @@ body.cockpit-view #station {
   }
   .orbit-neighbors.has-featured button { min-height: 44px; }
 }
+
+/* Fleet controls own one scroll region; summaries stay compact on a phone. */
+#station.has-fleet .node-grid { max-height: 124px; }
+#station.has-fleet .orbit-live > .eyebrow { margin: 0; }
+#station.has-fleet .fleet-summary { margin: 5px 0 0; font-size: 11px; line-height: 1.4; }
+#station.has-fleet .node-head { margin: 0; font-size: 11px; line-height: 1.4; }
+#station.has-fleet .node-status { margin: 4px 0 0; font-size: 9px; line-height: 1.4; }
+#station.has-fleet .live-freshness { margin: 5px 0 0; font-size: 9px; line-height: 1.4; }
+@media (max-width: 760px) {
+  #station.has-featured, body.cockpit-view #station.has-featured { max-height: min(392px, 62vh); }
+  #station.has-featured #station-body { max-height: 282px; }
+  #station.has-fleet .orbit-summary > p:not(.eyebrow),
+  #station.has-fleet .orbit-topics { display: none; }
+  #station.has-fleet .node-grid { max-height: 158px; }
+}
+
+#station.has-fleet .orbit-live[data-feed="talos"] .node-grid { max-height: 96px; }
+@media (max-width: 760px) {
+  #station.has-fleet .orbit-live[data-feed="talos"] .node-grid { max-height: 124px; }
+}

@@ -82,3 +82,12 @@ never returned. `PUBLIC_NODE_ALIASES` continues to control node display names.
 The fleet instrument groups nodes by cluster and retains keyboard focus and
 scroll position while readings refresh. Job Scout is featured within Public tools;
 Platen and Jev Playground remain neighboring destinations.
+
+
+The Proxmox moon reads `/api/insight/proxmox` from Mimir. Its collector uses
+privilege-separated audit-only API tokens outside this application and exports
+`orrery_proxmox_*` host gauges. No guest inventory or credentials reach the site.
+`PUBLIC_PROXMOX_ALIASES` maps host keys to public labels and retains configured
+hosts as unavailable when their series disappear. Successful collection timestamps
+must be at most 180 seconds old. CPU/RAM, uptime and VM/LXC counts are picked and
+validated individually; missing values remain unavailable.
