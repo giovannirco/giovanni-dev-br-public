@@ -608,6 +608,14 @@ function renderLive(reading) {
     : rows?.length
       ? `<dl>${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(String(value))}</dd></div>`).join("")}</dl>`
       : reading.data ? `<p class="live-note">${esc(reading.feed.unavailable || "No readings yet.")}</p>` : "";
+  // Freshness ticks must not replace an unchanged reading. In particular,
+  // replacing a focused node grid interrupts a keyboard scroll in progress.
+  if (body === reading.renderedBody) {
+    reading.target.querySelector(".eyebrow").textContent = stale ? "LAST READING" : "LIVE READING";
+    reading.target.querySelector(".live-freshness").textContent = status;
+    return;
+  }
+  reading.renderedBody = body;
   const previousGrid = reading.target.querySelector(".node-grid");
   const scrollTop = previousGrid?.scrollTop || 0;
   const restoreFocus = previousGrid && document.activeElement === previousGrid;

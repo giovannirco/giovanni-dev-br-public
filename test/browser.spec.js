@@ -1032,12 +1032,15 @@ test("node list stays scrolled and keyboard-focused while freshness updates", as
   await page.goto("/");
   await visit(page, "talos");
   const grid = page.locator(".node-grid");
+  await expect(grid.locator(".node-card")).toHaveCount(8);
+  const originalGrid = await grid.elementHandle();
   await grid.focus();
   await grid.press("End");
   await expect.poll(() => grid.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
   await expect(page.locator(".orbit-live .live-freshness")).toContainText(/Received [2-9]s ago/);
   expect(await grid.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
   await expect(grid).toBeFocused();
+  expect(await originalGrid.evaluate(el => el.isConnected)).toBe(true);
 });
 
 test("an answer is never labelled with a model that is not one", async ({ page }) => {
