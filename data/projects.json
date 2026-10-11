@@ -174,7 +174,7 @@
       "angle": 0.25,
       "sector": "Personal / Open source",
       "subtitle": "Useful things you can inspect",
-      "blurb": "Tools built around work I actually do: running a search, handling paper, and exploring model decisions.",
+      "blurb": "Job Scout leads this collection: an open-source opportunity desk, alongside Platen for printing and scanning and Jev Playground for model decisions.",
       "details": [
         "Each project has public source and a specific job. Open a moon for its purpose, the implementation, and a direct repository link.",
         "The same platform habits show up here: bounded interfaces, observable behavior and a way to inspect what happened."
@@ -189,7 +189,8 @@
         "Which projects are public?",
         "What does Platen do?",
         "What is Job Scout for?"
-      ]
+      ],
+      "featured": "scout"
     },
     {
       "id": "scout",
@@ -200,7 +201,7 @@
       "orbit": 4.4,
       "angle": 0.6,
       "sector": "Public tools / Career desk",
-      "subtitle": "Running a job search like an operations problem",
+      "subtitle": "An open-source opportunity desk",
       "blurb": "Job Scout is my opportunity desk: the tooling I built to run my own search the way I'd run a platform.",
       "details": [
         "A TypeScript monorepo with a Hono API, worker, React UI and PostgreSQL. It discovers listings, applies deterministic gates, and supports triage, research and application materials through a model gateway.",
@@ -219,7 +220,7 @@
       ],
       "parent": "workshop",
       "href": "https://github.com/giovannirco/job-scout",
-      "linkLabel": "View source"
+      "linkLabel": "Explore Job Scout on GitHub"
     },
     {
       "id": "platen",
@@ -467,7 +468,7 @@
       "blurb": "Talos machines managed through Omni, with separate clusters for different workloads.",
       "details": [
         "Control planes and general workers run as Proxmox virtual machines; the GPU worker runs on bare metal. Flux installs the platform and Argo CD reconciles applications.",
-        "This schematic reads Kubernetes inventory and joins node-exporter readings within each cluster. A missing reading remains unknown, and real node names never reach the page."
+        "Nodes are grouped by their actual cluster, with public display labels. Kubernetes inventory and node-exporter readings join within each cluster; missing readings remain unknown."
       ],
       "tags": [
         "Talos",

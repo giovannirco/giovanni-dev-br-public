@@ -375,7 +375,9 @@ test("same node names in different clusters cannot mix readings or readiness", a
     node_memory_MemAvailable_bytes: [row("private-a", { instance: "worker" }, 80)],
     kubelet_running_pods: [row("private-a", { node: "worker" }, 3), row("private-a", { node: "worker" }, 3), row("private-b", { node: "worker" }, 7)],
   }).nodes();
-  assert.deepEqual(reading.nodes, [
+  assert.equal(reading.clusters.length, 2);
+  assert.notEqual(reading.nodes[0].cluster, reading.nodes[1].cluster);
+  assert.deepEqual(reading.nodes.map(({ cluster, ...node }) => node), [
     { name: "node-01", ready: true, cores: 4, cpu: 0.2, memoryUsed: 20, memoryTotal: 100, pods: 3 },
     { name: "node-02", ready: false, cores: 8, cpu: 0.7, memoryUsed: null, memoryTotal: 200, pods: 7 },
   ]);
@@ -398,4 +400,19 @@ test("cold panels share a bounded metrics query budget and release slots on fail
   assert.ok(peak <= 4, `upstream concurrency was ${peak}`);
   assert.ok(calls > 20, "all queued panels were exercised");
   assert.equal(active, 0);
+});
+
+
+test("cluster aliases are explicit and stable across reordered and missing inventory", async () => {
+  const row = (cluster, node) => ({ metric: { cluster, node }, value: [1, "1"] });
+  const inventory = [row("private-b", "worker"), row("private-a", "worker")];
+  const options = { clusterAliases: "private-a=Personal services,private-b=Production" };
+  const first = await nodeFeed({ kube_node_info: inventory }, options).nodes();
+  const second = await nodeFeed({ kube_node_info: inventory.slice(0, 1) }, options).nodes();
+  assert.deepEqual(first.clusters.map(c => c.name), ["Personal services", "Production"]);
+  assert.deepEqual(second.clusters[0], first.clusters[1]);
+  assert.equal(second.nodes[0].cluster, first.nodes[1].cluster);
+  assert.doesNotMatch(JSON.stringify(first), /private-|worker/);
+  const invalid = await nodeFeed({ kube_node_info: inventory }, { clusterAliases: "private-a=<script>" }).nodes();
+  assert.equal(invalid.clusters[0].name, "Cluster 1");
 });

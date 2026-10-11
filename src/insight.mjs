@@ -1,4 +1,5 @@
 import { createReadCache, upstreamJson } from "./upstream.mjs";
+import { createHash } from "node:crypto";
 // Read-only instrument panels backed by a shared metrics store. Cluster
 // identity is retained while deduplicating and joining, then discarded before
 // returning public readings. Job Scout contributes aggregate metrics only.
@@ -144,7 +145,7 @@ export const NODE_QUERIES = {
 // Node names are display aliases from the cluster, not caller input, but they
 // are still upstream text on their way to a browser. Bound them.
 const NODE_NAME = /^[a-z0-9][a-z0-9._-]{0,39}$/i;
-const MAX_NODES = 16;
+const MAX_NODES = 128;
 
 // A real node name is infrastructure detail. Printing it on a public panel
 // hands a visitor an inventory of the machines behind the site, and no reading
@@ -197,12 +198,14 @@ export function createInsight({
   mimirUrl = process.env.MIMIR_URL || "",
   mimirTenant = process.env.MIMIR_TENANT || "anonymous",
   nodeAliases = process.env.PUBLIC_NODE_ALIASES || "",
+  clusterAliases = process.env.PUBLIC_CLUSTER_ALIASES || "",
   fetchImpl = fetch,
   cacheMs = CACHE_MS,
   now = () => Date.now(),
 } = {}) {
   const cached = createReadCache({ ttlMs: cacheMs, now });
   const aliases = parseNodeAliases(nodeAliases);
+  const clusterNames = parseNodeAliases(clusterAliases);
 
   // All panels share this budget. A cold site read alone has seventeen
   // queries; overlapping panels otherwise exhaust small Mimir query queues.
@@ -338,6 +341,11 @@ export function createInsight({
           promql(NODE_QUERIES.pods),
         ]);
       const names = [...byNode(inventory).keys()].sort();
+      const clusterKeys = [...new Set(names.slice(0, MAX_NODES).map(name => name.split("\0")[0]))];
+      const clusters = new Map(clusterKeys.map((key, index) => [key, {
+        id: `cluster-${createHash("sha256").update(key).digest("hex").slice(0, 12)}`,
+        name: clusterNames.get(key) || (key ? `Cluster ${index + 1}` : "Unassigned cluster"),
+      }]));
       const readyNodes = new Map();
       for (const row of ready) {
         const name = nodeKey(row.metric);
@@ -355,12 +363,14 @@ export function createInsight({
       const available = byNode(memoryAvailable, "instance");
       const running = byNode(pods, "node");
       return {
+        clusters: [...clusters.values()],
         nodes: names.slice(0, MAX_NODES).map((name, index) => {
           const memory = total.get(name) ?? null;
           const free = available.get(name) ?? null;
           const statuses = readyNodes.get(name);
           const status = statuses?.size === 1 ? [...statuses][0] : "unknown";
           return {
+            cluster: clusters.get(name.split("\0")[0]).id,
             name: aliases.get(name.split("\0")[1]) || positional(index),
             ready: status === "true" ? true : status === "false" ? false : null,
             cores: round(coreCounts.get(name) ?? null),

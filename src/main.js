@@ -262,10 +262,12 @@ const LIVE_FEEDS = {
     url: "/api/insight/nodes",
     rows: (d) => (d.nodes?.length ? [] : null),
     unavailable: "The cluster is not reporting right now.",
-    draw: (d) =>
-      d.nodes?.length
-        ? `<ul class="node-grid" tabindex="0" aria-label="Cluster nodes">${d.nodes
-            .map((node) => {
+    draw: (d) => {
+      if (!d.nodes?.length) return "";
+      const clusters = d.clusters?.length ? d.clusters : [{ id: undefined, name: "Cluster" }];
+      return `<div class="node-grid" tabindex="0" role="region" aria-label="Cluster nodes">${clusters.map(cluster => {
+        const nodes = d.nodes.filter(node => node.cluster === cluster.id);
+        return `<section class="node-cluster"><h3>${esc(cluster.name)}<span>${nodes.length} ${nodes.length === 1 ? "node" : "nodes"}</span></h3><ul class="cluster-nodes">${nodes.map((node) => {
               const known = finite(node.cpu) || finite(node.memoryTotal) || finite(node.pods);
               const memory =
                 finite(node.memoryUsed) && finite(node.memoryTotal) && node.memoryTotal > 0
@@ -279,8 +281,9 @@ const LIVE_FEEDS = {
                   : `${meter("CPU", null, "—")}${meter("RAM", null, "—")}`
               }</li>`;
             })
-            .join("")}</ul>`
-        : "",
+            .join("")}</ul></section>`;
+      }).join("")}</div>`;
+    },
   },
   // Aggregates only, by construction: the feed behind this cannot return a
   // per-monitor row, so there is nothing here to accidentally render.
@@ -682,7 +685,7 @@ function fillStation(spec) {
       .map((tag) => `<span>${esc(tag)}</span>`)
       .join(
         "",
-      )}${spec.href ? `<a href="${esc(spec.href)}">${esc(spec.linkLabel)} ↗</a>` : ""}</div></div><div class="orbit-neighbors"><p class="eyebrow">${parent ? esc(parent.name) + " / NEARBY" : "MOONS / " + destinations.length}</p><div>${destinations.map((b) => `<button data-neighbor="${b.id}" style="--body-color:${b.color}"><span>◌</span>${esc(b.name)}<span>↗</span></button>`).join("") || '<button data-neighbor="survey">Survey array ↗</button>'}</div></div>${LIVE_FEEDS[spec.id] ? '<div class="orbit-live"></div>' : ""}`;
+      )}${spec.href ? `<a href="${esc(spec.href)}">${esc(spec.linkLabel)} ↗</a>` : ""}</div></div><div class="orbit-neighbors${spec.featured ? " has-featured" : ""}"><p class="eyebrow">${parent ? esc(parent.name) + " / NEARBY" : "MOONS / " + destinations.length}</p><div>${destinations.map((b) => `<button data-neighbor="${b.id}" class="${b.id === spec.featured ? "featured-project" : ""}" style="--body-color:${b.color}"><span>◌</span>${esc(b.name)}${b.id === spec.featured ? '<small>Featured project</small>' : ""}<span>↗</span></button>`).join("") || '<button data-neighbor="survey">Survey array ↗</button>'}</div></div>${LIVE_FEEDS[spec.id] ? '<div class="orbit-live"></div>' : ""}`;
   $("#station-body")
     .querySelectorAll("[data-neighbor]")
     .forEach((button) =>
