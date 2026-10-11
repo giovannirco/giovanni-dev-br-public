@@ -906,7 +906,7 @@ test("the cluster schematic draws one machine per node and marks a silent one", 
   await expect(cards.nth(0)).toContainText("worker-01");
   await expect(cards.nth(0)).toContainText("108 pods");
   await expect(cards.nth(0)).toContainText("19%");
-  await expect(cards.nth(0)).toContainText("12/33 GB");
+  await expect(cards.nth(0)).toContainText("11.2/30.7 GiB");
   await expect(cards.nth(0)).toHaveAttribute("data-state", "ready");
 
   // The machine the cluster lists but nothing reports for must not read as an
@@ -1293,4 +1293,21 @@ test("Proxmox shows host utilization and honest unavailable collectors", async (
   await expect(page.locator(".node-card").first()).toContainText("VMs 5/7 · LXCs 0/3 running");
   await expect(page.locator(".node-card").last()).toContainText("Reading unavailable");
   await expect(page.locator(".node-card").last()).not.toContainText("0%");
+});
+
+test("GPU usage shows real zeroes, gaps and binary VRAM", async ({page}) => {
+  await mockAPI(page);
+  await page.route('**/api/insight/gpu',route=>route.fulfill({json:{gpus:[
+    {name:'GPU 1',usage:0,memoryUsed:2**30,memoryTotal:24*2**30,temperature:40,power:20,powerLimit:200,updatedAt:new Date().toISOString(),history:[[1,.5],[2,null],[3,0]]},
+    {name:'GPU 2',usage:null,memoryUsed:null,memoryTotal:null,temperature:null,power:null,powerLimit:null,updatedAt:null,history:[]},
+  ]}}));
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/');await visit(page,'gpu-lab');
+  const first=page.locator('.gpu-grid .node-card').first();
+  await expect(first).toContainText('0% busy');await expect(first).toContainText('1.0/24.0 GiB');
+  await expect(first.locator('svg')).toHaveAttribute('aria-label',/Missing samples appear as gaps/);
+  await expect(first.locator('circle')).toHaveCount(2);
+  await page.locator('.gpu-grid').focus();await page.keyboard.press('End');
+  await expect(page.locator('.gpu-grid .node-card').last()).toContainText('Unavailable');
+  await expect(page.locator('.gpu-grid .node-card').last().locator('.node-head')).not.toContainText('0%');
 });

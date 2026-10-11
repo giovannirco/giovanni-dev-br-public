@@ -321,7 +321,7 @@
       "orbit": 4.4,
       "angle": 0.6,
       "sector": "Homelab / Local AI",
-      "subtitle": "Local images, language and music",
+      "subtitle": "Local models · live GPU usage",
       "blurb": "A bare-metal worker with two RTX 3090s for local image, language and music model experiments.",
       "details": [
         "The worker belongs to the personal-services cluster and runs local model tooling, including ComfyUI and Ollama.",

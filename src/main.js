@@ -1,3 +1,4 @@
+import { memoryGiB, usageGraph } from "./telemetry-view.mjs";
 import "./style.css";
 import "./orbit.css";
 import { createComm } from "./comm.js";
@@ -222,7 +223,7 @@ function gigabytes(bytes) {
 // a claim.
 function meter(label, fraction, value) {
   const width = finite(fraction) ? Math.round(Math.min(Math.max(fraction, 0), 1) * 100) : 0;
-  return `<div class="node-meter"><span>${esc(label)}</span><i><span style="width:${width}%"></span></i><b>${esc(value)}</b></div>`;
+  return `<div class="node-meter"${label === "RAM" ? ' title="Used / usable memory in GiB; firmware and kernel reservations reduce the installed capacity."' : ""}><span>${esc(label)}</span><i><span style="width:${width}%"></span></i><b>${esc(value)}</b></div>`;
 }
 
 const LIVE_FEEDS = {
@@ -265,7 +266,7 @@ const LIVE_FEEDS = {
     draw: (d) => {
       if (!d.nodes?.length) return "";
       const clusters = d.clusters?.length ? d.clusters : [{ id: undefined, name: "Cluster" }];
-      return `<p class="fleet-summary">${clusters.length} ${clusters.length === 1 ? "cluster" : "clusters"} · ${d.nodes.length} nodes</p><div class="node-grid" tabindex="0" role="region" aria-label="Cluster nodes">${clusters.map(cluster => {
+      return `<p class="fleet-summary">${clusters.length} ${clusters.length === 1 ? "cluster" : "clusters"} · ${d.nodes.length} nodes</p><div class="node-grid" tabindex="0" role="region" aria-label="Cluster nodes"><p class="memory-note">RAM: used / usable GiB, after system reservations.</p>${clusters.map(cluster => {
         const nodes = d.nodes.filter(node => node.cluster === cluster.id);
         return `<section class="node-cluster"><h3>${esc(cluster.name)}<span>${nodes.length} ${nodes.length === 1 ? "node" : "nodes"}</span></h3><ul class="cluster-nodes">${nodes.map((node) => {
               const known = finite(node.cpu) || finite(node.memoryTotal) || finite(node.pods);
@@ -277,7 +278,7 @@ const LIVE_FEEDS = {
                 known ? `${number(node.pods)} pods` : "silent"
               }</span></p><p class="node-status">${node.ready === true ? "Ready" : node.ready === false ? "Not ready" : "Readiness unknown"} · ${number(node.cores)} cores</p>${
                 known
-                  ? `${meter("CPU", node.cpu, finite(node.cpu) ? `${Math.round(node.cpu * 100)}%` : "—")}${meter("RAM", memory, finite(node.memoryUsed) && finite(node.memoryTotal) ? `${(node.memoryUsed / 1e9).toFixed(0)}/${(node.memoryTotal / 1e9).toFixed(0)} GB` : "—")}`
+                  ? `${meter("CPU", node.cpu, finite(node.cpu) ? `${Math.round(node.cpu * 100)}%` : "—")}${meter("RAM", memory, finite(node.memoryUsed) && finite(node.memoryTotal) ? memoryGiB(node.memoryUsed, node.memoryTotal) : "—")}`
                   : `${meter("CPU", null, "—")}${meter("RAM", null, "—")}`
               }</li>`;
             })
@@ -285,13 +286,19 @@ const LIVE_FEEDS = {
       }).join("")}</div>`;
     },
   },
+  "gpu-lab": {
+    url: "/api/insight/gpu",
+    rows: d => d.gpus?.length ? [] : null,
+    unavailable: "The GPUs are not reporting right now.",
+    draw: d => d.gpus?.length ? `<p class="fleet-summary">${d.gpus.length} GPUs · usage over 15m · scroll for each card</p><div class="node-grid gpu-grid" tabindex="0" role="region" aria-label="GPU readings"><ul class="cluster-nodes">${d.gpus.map(gpu => `<li class="node-card"><p class="node-head">${esc(gpu.name)}<span>${finite(gpu.usage) ? `${Math.round(gpu.usage*100)}% busy` : "Unavailable"}</span></p>${usageGraph(gpu.history)}<p class="gpu-stats">VRAM ${memoryGiB(gpu.memoryUsed,gpu.memoryTotal)}<br>${finite(gpu.temperature) ? `${Math.round(gpu.temperature)}°C` : "—"} · ${finite(gpu.power) ? `${Math.round(gpu.power)} W` : "—"}${finite(gpu.powerLimit) ? ` / ${Math.round(gpu.powerLimit)} W limit` : ""}</p><p class="node-status">Sample ${gpu.updatedAt ? esc(relativeTime(gpu.updatedAt)) : "unavailable"}</p></li>`).join("")}</ul></div>` : "",
+  },
   proxmox: {
     url: "/api/insight/proxmox",
     rows: d => d.hosts?.length ? [] : null,
     unavailable: "Proxmox is not reporting right now.",
-    draw: d => d.hosts?.length ? `<div class="node-grid" tabindex="0" role="region" aria-label="Proxmox hosts"><ul class="cluster-nodes">${d.hosts.map(host => {
+    draw: d => d.hosts?.length ? `<div class="node-grid" tabindex="0" role="region" aria-label="Proxmox hosts"><p class="memory-note">RAM: used / usable GiB, after system reservations.</p><ul class="cluster-nodes">${d.hosts.map(host => {
       const memory = finite(host.memoryUsed) && finite(host.memoryTotal) && host.memoryTotal > 0 ? host.memoryUsed / host.memoryTotal : null;
-      return `<li class="node-card" data-state="${host.reporting && host.up === true ? "ready" : host.up === false ? "not-ready" : "unknown"}"><p class="node-head"><i class="node-dot" aria-hidden="true"></i>${esc(host.name)}</p><p class="node-status">${host.reporting ? host.up === true ? "Online" : host.up === false ? "Offline" : "Status unknown" : "Reading unavailable"} · ${number(host.cores)} cores</p>${meter("CPU", host.cpu, finite(host.cpu) ? `${Math.round(host.cpu * 100)}%` : "—")}${meter("RAM", memory, memory !== null ? `${(host.memoryUsed / 1e9).toFixed(0)}/${(host.memoryTotal / 1e9).toFixed(0)} GB` : "—")}<p class="node-status">VMs ${number(host.vmsRunning)}/${number(host.vmsTotal)} · LXCs ${number(host.containersRunning)}/${number(host.containersTotal)} running</p><p class="node-status">Uptime ${finite(host.uptimeSeconds) ? `${Math.floor(host.uptimeSeconds / 86400)}d ${Math.floor(host.uptimeSeconds % 86400 / 3600)}h` : "—"}</p></li>`;
+      return `<li class="node-card" data-state="${host.reporting && host.up === true ? "ready" : host.up === false ? "not-ready" : "unknown"}"><p class="node-head"><i class="node-dot" aria-hidden="true"></i>${esc(host.name)}</p><p class="node-status">${host.reporting ? host.up === true ? "Online" : host.up === false ? "Offline" : "Status unknown" : "Reading unavailable"} · ${number(host.cores)} cores</p>${meter("CPU", host.cpu, finite(host.cpu) ? `${Math.round(host.cpu * 100)}%` : "—")}${meter("RAM", memory, memory !== null ? memoryGiB(host.memoryUsed, host.memoryTotal) : "—")}<p class="node-status">VMs ${number(host.vmsRunning)}/${number(host.vmsTotal)} · LXCs ${number(host.containersRunning)}/${number(host.containersTotal)} running</p><p class="node-status">Uptime ${finite(host.uptimeSeconds) ? `${Math.floor(host.uptimeSeconds / 86400)}d ${Math.floor(host.uptimeSeconds % 86400 / 3600)}h` : "—"}</p></li>`;
     }).join("")}</ul></div>` : "",
   },
   // Aggregates only, by construction: the feed behind this cannot return a
@@ -386,6 +393,7 @@ const SCANNER = { ENTER: 7, EXIT: 11, DWELL: 900, REFRESH: 30_000 };
 // Two or three readings, not the whole orbit panel. Deliberately a subset of
 // the same feeds, so a visitor who then enters orbit sees the same numbers.
 const SCANNER_SOURCES = {
+  "gpu-lab": d => d.gpus?.map(g => [g.name, finite(g.usage) ? `${Math.round(g.usage*100)}% busy` : "Unavailable"]),
   watchtower: (d) => LIVE_FEEDS.watchtower.rows(d)?.filter((_, index) => [0, 2, 4].includes(index)) || [["Watch", "Not reporting"]],
   bitcoin: (d) => [
     ["Block", number(d.height)],
@@ -682,7 +690,7 @@ function stationHTML(spec, first, mode) {
 }
 function fillStation(spec) {
   $("#station").classList.toggle("has-featured", Boolean(spec.featured));
-  $("#station").classList.toggle("has-fleet", ["talos", "proxmox"].includes(spec.id));
+  $("#station").classList.toggle("has-fleet", ["talos", "proxmox", "gpu-lab"].includes(spec.id));
   const parent = catalog.bodies.find((b) => b.id === spec.parent);
   const family = catalog.bodies.filter(
     (b) => b.parent === (spec.parent || spec.id),

@@ -1,3 +1,4 @@
+import { GPU_QUERY, gpuReadings } from "./gpu.mjs";
 import { createReadCache, upstreamJson } from "./upstream.mjs";
 import { createHash } from "node:crypto";
 // Read-only instrument panels backed by a shared metrics store. Cluster
@@ -482,5 +483,7 @@ export function createInsight({
     });
   }
 
-  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, ready: () => Boolean(mimirUrl) };
+  const gpu = () => cached("gpu", async () => gpuReadings(await promql(GPU_QUERY), now()));
+
+  return { site, lab, scout, nodes, watch, bitcoin, network, proxmox, gpu, ready: () => Boolean(mimirUrl) };
 }
