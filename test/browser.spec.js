@@ -1266,6 +1266,9 @@ test("fleet separates nodes by cluster and features the public Job Scout project
   await visit(page, "talos");
   const groups = page.locator(".node-cluster");
   await expect(groups).toHaveCount(2);
+  const freshness = await page.locator(".orbit-live .live-freshness").boundingBox();
+  const visibleBody = await page.locator("#station-body").boundingBox();
+  expect(freshness.y + freshness.height).toBeLessThanOrEqual(visibleBody.y + visibleBody.height);
   await expect(groups.first()).toContainText("Personal services");
   await expect(groups.first()).toContainText("node-a");
   await expect(groups.first()).not.toContainText("node-b");

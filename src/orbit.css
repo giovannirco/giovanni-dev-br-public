@@ -1248,3 +1248,8 @@ body.cockpit-view #station {
   #station.has-fleet .orbit-topics { display: none; }
   #station.has-fleet .node-grid { max-height: 158px; }
 }
+
+#station.has-fleet .orbit-live[data-feed="talos"] .node-grid { max-height: 96px; }
+@media (max-width: 760px) {
+  #station.has-fleet .orbit-live[data-feed="talos"] .node-grid { max-height: 124px; }
+}
