@@ -29,6 +29,7 @@ after(
 
 test("cluster scrapes /metrics; public Host or X-Forwarded-For is 404", async () => {
   assert.equal(metricsDenied({ headers: { host: "giovanni.dev.br" } }), true);
+  assert.equal(metricsDenied({ headers: { host: "orrery.giovanni.dev.br" }, socket: { remoteAddress: "10.77.0.5" } }), true);
   assert.equal(
     metricsDenied({ headers: { "x-forwarded-for": "1.2.3.4" } }),
     true,
