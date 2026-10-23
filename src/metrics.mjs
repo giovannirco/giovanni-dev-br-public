@@ -41,7 +41,8 @@ export function metricsDenied(req) {
   // it claims in its headers.
   if (!isPrivateAddress(req.socket?.remoteAddress)) return true;
   const host = (req.headers.host || "").split(":")[0]?.toLowerCase() || "";
-  if (host === "giovanni.dev.br" || host === "www.giovanni.dev.br") return true;
+  // Every public name under the zone, whichever one this deployment answers on.
+  if (host === "giovanni.dev.br" || host.endsWith(".giovanni.dev.br")) return true;
   if (req.headers["x-forwarded-for"] || req.headers["x-envoy-external-address"])
     return true;
   return false;

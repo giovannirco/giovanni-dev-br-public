@@ -111,3 +111,16 @@ test("the server sends one 308 to canonical https and keeps the path", async () 
     await new Promise((resolve) => app.close(resolve));
   }
 });
+
+test("the deployment can move the site to another host", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const script = `
+    process.env.TRUSTED_PROXY_CIDRS = "127.0.0.1/32";
+    const { httpsRedirect } = await import("./src/scheme.mjs");
+    const r = (host, xfp) => httpsRedirect({ headers: { host, "x-forwarded-proto": xfp }, url: "/x", socket: { remoteAddress: "127.0.0.1" } });
+    console.log(JSON.stringify([r("orrery.giovanni.dev.br", "https"), r("orrery.giovanni.dev.br", "http"), r("giovanni.dev.br", "http")]));`;
+  const out = execFileSync(process.execPath, ["--input-type=module", "-e", script], {
+    env: { ...process.env, CANONICAL_HOST: "orrery.giovanni.dev.br", PUBLIC_HOSTS: "orrery.giovanni.dev.br" },
+  }).toString();
+  assert.deepEqual(JSON.parse(out), [null, "https://orrery.giovanni.dev.br/x", null]);
+});

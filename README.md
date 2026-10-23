@@ -1,6 +1,6 @@
-# giovanni.dev.br
+# The orrery
 
-A compact Three.js orrery about Giovanni Coutinho, Platform Engineer in Belo Horizonte. Fly between projects, enter orbit to read their dossiers, and open COMM for a conversation grounded in that destination. The resume is a separate application at https://resume.giovanni.dev.br and remains accessible without JavaScript or WebGL.
+A compact Three.js orrery about Giovanni Coutinho, at https://orrery.giovanni.dev.br. His portfolio is at https://giovanni.dev.br. Fly between projects, enter orbit to read their dossiers, and open COMM for a conversation grounded in that destination. The resume is a separate application at https://resume.giovanni.dev.br and remains accessible without JavaScript or WebGL.
 
 ## Play
 
@@ -48,6 +48,7 @@ The server listens on port 8080. Configuration comes from process environment va
 | `PUBLIC_NODE_ALIASES` | `real=shown` pairs for the node panel; unmapped machines read as `node-01` |
 | `LIGHTNING_ADDRESS`, `BTCPAY_URL` | Optional public payment destination |
 | `TRUSTED_PROXY_CIDRS`, `TRUSTED_EDGE_CIDRS` | Explicit forwarding-header trust boundaries |
+| `CANONICAL_HOST`, `PUBLIC_HOSTS` | The host to redirect to and the public names that land on it (default `giovanni.dev.br` and `www.`) |
 | `LOG_LEVEL`, `APP_VERSION` | Structured logging level and release identifier |
 
 Deployment addresses belong in private deployment configuration. Credentials belong in a secret manager or runtime Secret references, never committed values. Integrations without configuration are unavailable; the portfolio remains playable. Payment destinations, selected model IDs and configured public metric readings are intentionally visible to visitors. Cluster readings never carry a real machine name: the node panel shows `PUBLIC_NODE_ALIASES` labels, or positional ones when unset. The uptime panel is aggregate-only for the same reason: its upstream series label every reading with the monitor's name, URL and hostname, so each query collapses the whole set to a single number and none may group by, select or return a per-monitor series. A test asserts that of every query rather than trusting the author of the next one.

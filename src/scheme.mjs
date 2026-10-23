@@ -19,7 +19,10 @@ import { isTrustedPeer, fromCloudflare } from "./client.mjs";
 // Every branch either redirects to https or leaves the request alone, so no
 // input can produce a cycle.
 
-export const CANONICAL_HOST = "giovanni.dev.br";
+// The deployment names the host (CANONICAL_HOST) and every public name that
+// should land on it (PUBLIC_HOSTS, comma-separated). Without them the site
+// keeps its original apex and www.
+export const CANONICAL_HOST = (process.env.CANONICAL_HOST || "giovanni.dev.br").trim().toLowerCase();
 
 export function originalScheme(req) {
   if (!isTrustedPeer(req)) return req.socket?.encrypted ? "https" : "";
@@ -39,7 +42,13 @@ export function originalScheme(req) {
 
 // The public hostnames this site answers on. A request for anything else is
 // left alone: it is either internal or something we do not own.
-const PUBLIC_HOSTS = new Set([CANONICAL_HOST, `www.${CANONICAL_HOST}`]);
+const PUBLIC_HOSTS = new Set(
+  (process.env.PUBLIC_HOSTS || `${CANONICAL_HOST},www.${CANONICAL_HOST}`)
+    .split(",")
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)
+    .concat(CANONICAL_HOST),
+);
 
 // Returns the absolute https URL to send the visitor to, or null to serve the
 // request as-is. Wrong scheme and wrong host resolve in a single hop.
