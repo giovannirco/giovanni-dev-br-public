@@ -11,7 +11,7 @@
     "test:browser": "npm run build && playwright test"
   },
   "dependencies": {
-    "dompurify": "3.4.16",
+    "dompurify": "3.4.17",
     "marked": "18.1.0",
     "pino": "10.4.0",
     "three": "0.186.1"
