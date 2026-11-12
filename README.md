@@ -30,6 +30,7 @@ Use Node 24 (the container and CI runtime):
 npm ci
 npm run build
 npm test
+npx playwright install chromium
 npm run test:browser
 node server.mjs
 ```
@@ -65,7 +66,7 @@ Logging-only bounds are applied to the log copy alone. Clipping a visitor or orb
 
 ## Deploy and verify
 
-`Dockerfile` builds the static frontend and Node server, runs as UID 10001, and exposes port 8080. Build for the target architecture, smoke-test `/api/healthz` with a read-only root filesystem and writable `/tmp`, then publish to your registry. Keep image digest pins and runtime configuration in your private deployment repository. This repository contains CI, not credentials or an environment-specific deployment workflow.
+`Dockerfile` builds the static frontend and Node server, runs as UID 10001, and exposes port 8080. Build for the target architecture, smoke-test `/api/healthz` with a read-only root filesystem and writable `/tmp`, then publish to your registry. Keep image digest pins and runtime configuration in your private deployment repository. Pushing `master` runs `.github/workflows/release.yml`, which publishes `ghcr.io/giovannirco/giovanni-dev-br-public:<full-commit-sha>` and `latest` for Linux AMD64 and reports the digest. It does not update deployment configuration. This repository contains no deployment credentials or environment-specific rollout workflow.
 
 Run the Node and desktop/phone browser suites before shipping. Review the deployed asset version and both viewport sizes after deployment. Live browser reviews must intercept notification endpoints to avoid sending review traffic to the operator.
 
