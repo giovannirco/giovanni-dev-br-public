@@ -66,6 +66,27 @@ test("the runtime image carries every module the notify relay imports", () => {
     );
 });
 
+test("the runtime image carries every module the metrics proxy imports", () => {
+  const copies = runtimeCopies();
+  for (const file of runtimeModules("metrics-proxy.mjs").files)
+    assert.ok(
+      copies.some((pattern) => covers(pattern, file)),
+      `${file} is imported by metrics-proxy.mjs but no Dockerfile COPY brings it into the runtime image`,
+    );
+});
+
+test("the runtime image ships no shell, BusyBox tools or package installer", () => {
+  const lines = readFileSync(resolve(root, "Dockerfile"), "utf8").split("\n");
+  const runtime = lines.slice(lines.findLastIndex((line) => /^FROM\s/.test(line))).join("\n");
+  assert.match(runtime, /readlink "\$f"\)" = \/bin\/busybox \]; then \/bin\/busybox rm "\$f"/);
+  for (const path of ["/bin/busybox", "/sbin/apk", "/etc/apk", "/lib/apk"])
+    assert.ok(new RegExp(`rm -rf[^\\n]*\\s${path.replace(/\//g, "\\/")}(\\s|$)`, "m").test(runtime), `${path} is not removed from the runtime image`);
+  const removal = runtime.indexOf("/bin/busybox readlink");
+  for (const needsShell of ["adduser", "apk upgrade"]) assert.ok(runtime.indexOf(needsShell) < removal, `${needsShell} must run before the shell is removed`);
+  assert.match(runtime, /^ENTRYPOINT \[\]$/m, "the base image entrypoint is a shell script and must be cleared");
+  assert.equal(/^RUN /m.test(runtime.slice(removal).split("\n").slice(1).join("\n")), false, "no RUN can follow the shell removal");
+});
+
 test("the runtime image carries the built site and the catalog", () => {
   const copies = runtimeCopies();
   for (const needed of ["dist", "data"])
