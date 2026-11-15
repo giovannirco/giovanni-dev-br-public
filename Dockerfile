@@ -26,6 +26,7 @@ RUN addgroup -S gio && adduser -S -G gio -u 10001 gio
 COPY --from=build --chown=gio:gio /app/dist ./dist
 COPY --from=build --chown=gio:gio /app/data ./data
 COPY --from=build --chown=gio:gio /app/server.mjs ./server.mjs
+COPY --from=build --chown=gio:gio /app/relay.mjs ./relay.mjs
 COPY --from=build --chown=gio:gio /app/src/*.mjs ./src/
 COPY --from=build --chown=gio:gio /app/package.json ./package.json
 COPY --from=deps --chown=gio:gio /app/node_modules ./node_modules

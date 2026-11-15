@@ -149,10 +149,8 @@ function fail(status, message) {
 
 export function createBeacon({
   fetchImpl = fetch,
-  baseUrl = process.env.WAHA_BASE_URL || "",
-  apiKey = process.env.WAHA_API_KEY || "",
-  session = process.env.WAHA_SESSION || "default",
-  chatId = process.env.WAHA_BEACON_CHAT_ID || "",
+  baseUrl = process.env.NOTIFY_URL || "",
+  apiKey = process.env.NOTIFY_TOKEN || "",
   now = () => Date.now(),
 } = {}) {
   // Keyed on the connection, not on a browser-generated id the visitor can
@@ -164,7 +162,7 @@ export function createBeacon({
   const root = String(baseUrl || "").replace(/\/$/, "");
 
   function ready() {
-    return Boolean(root && apiKey && chatId);
+    return Boolean(root && apiKey);
   }
 
   async function send(body = {}, context = {}, launch = false) {
@@ -197,13 +195,13 @@ export function createBeacon({
     });
     let response;
     try {
-      response = await fetchImpl(`${root}/api/sendText`, {
+      response = await fetchImpl(`${root}/notify`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "X-Api-Key": apiKey,
+          authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({ session, chatId, text }),
+        body: JSON.stringify({ kind: launch ? "launch" : "relay", text }),
         signal: AbortSignal.timeout(5000),
       });
     } catch (err) {

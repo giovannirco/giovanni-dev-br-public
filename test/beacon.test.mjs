@@ -52,9 +52,8 @@ test("unconfigured relay stays dark without calling the network", async () => {
 
 test("unknown relay and bad visitor are rejected before send", async () => {
   const beacon = createBeacon({
-    baseUrl: "http://waha.example",
+    baseUrl: "http://notify.example",
     apiKey: "k",
-    chatId: "120@g.us",
     fetchImpl: async () => {
       throw new Error("should not fetch");
     },
@@ -69,13 +68,11 @@ test("unknown relay and bad visitor are rejected before send", async () => {
   );
 });
 
-test("successful ping posts sendText and never returns upstream bodies", async () => {
+test("successful ping posts to the notify relay and never returns upstream bodies", async () => {
   const calls = [];
   const beacon = createBeacon({
-    baseUrl: "http://waha.example/",
+    baseUrl: "http://notify.example/",
     apiKey: "secret-key",
-    session: "default",
-    chatId: "120@g.us",
     now: () => 1_000,
     fetchImpl: async (url, opts) => {
       calls.push({ url, opts });
@@ -92,21 +89,21 @@ test("successful ping posts sendText and never returns upstream bodies", async (
   });
   assert.deepEqual(result, { ok: true });
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, "http://waha.example/api/sendText");
-  assert.equal(calls[0].opts.headers["X-Api-Key"], "secret-key");
+  assert.equal(calls[0].url, "http://notify.example/notify");
+  assert.equal(calls[0].opts.headers.authorization, "Bearer secret-key");
+  assert.equal(calls[0].opts.headers["X-Api-Key"], undefined);
   const payload = JSON.parse(calls[0].opts.body);
-  assert.equal(payload.session, "default");
-  assert.equal(payload.chatId, "120@g.us");
+  assert.deepEqual(Object.keys(payload).sort(), ["kind", "text"]);
+  assert.equal(payload.kind, "relay");
   assert.match(payload.text, /Heliograph/);
-  assert.doesNotMatch(payload.text, /secret-key|waha\.example/);
+  assert.doesNotMatch(payload.text, /secret-key|notify\.example/);
 });
 
 test("rate limit cools a visitor down", async () => {
   let t = 0;
   const beacon = createBeacon({
-    baseUrl: "http://waha.example",
+    baseUrl: "http://notify.example",
     apiKey: "k",
-    chatId: "120@g.us",
     now: () => t,
     fetchImpl: async () => ({ ok: true, status: 201, text: async () => "" }),
   });
@@ -180,9 +177,8 @@ test("the cooldown follows the connection, not a rotatable visitor id", async ()
   let t = 0;
   const sent = [];
   const beacon = createBeacon({
-    baseUrl: "http://waha.example",
+    baseUrl: "http://notify.example",
     apiKey: "k",
-    chatId: "120@g.us",
     now: () => t,
     fetchImpl: async (_url, opts) => {
       sent.push(JSON.parse(opts.body).text);
@@ -203,9 +199,8 @@ test("a dark relay does not burn the visitor's cooldown", async () => {
   let t = 0,
     healthy = false;
   const beacon = createBeacon({
-    baseUrl: "http://waha.example",
+    baseUrl: "http://notify.example",
     apiKey: "k",
-    chatId: "120@g.us",
     now: () => t,
     fetchImpl: async () =>
       healthy
@@ -242,7 +237,7 @@ test("launch messages reuse visitor details and omit referrer secrets", () => {
 test("launches have separate connection limits and refund failed delivery", async () => {
   let healthy = false;
   const sent = [];
-  const beacon = createBeacon({ baseUrl: "http://waha.example", apiKey: "k", chatId: "120@g.us", now: () => 1000,
+  const beacon = createBeacon({ baseUrl: "http://notify.example", apiKey: "k", now: () => 1000,
     fetchImpl: async (_url, opts) => { if (healthy) sent.push(JSON.parse(opts.body)); return { ok: healthy }; },
   });
   const context = { client: { key: "connection-a", address: "203.0.113.7" } };
@@ -256,12 +251,14 @@ test("launches have separate connection limits and refund failed delivery", asyn
   assert.equal(sent.length, 4);
   assert.match(sent[0].text, /orrery launch/);
   assert.match(sent[3].text, /Heliograph/);
-  assert.deepEqual(Object.keys(sent[0]).sort(), ["chatId", "session", "text"]);
+  assert.deepEqual(Object.keys(sent[0]).sort(), ["kind", "text"]);
+  assert.equal(sent[0].kind, "launch");
+  assert.equal(sent[3].kind, "relay");
 });
 
 test("a connection gets three launch notifications per ten minutes", async () => {
   let clock = 0;
-  const beacon = createBeacon({ baseUrl: "http://waha.example", apiKey: "k", chatId: "120@g.us", now: () => clock,
+  const beacon = createBeacon({ baseUrl: "http://notify.example", apiKey: "k", now: () => clock,
     fetchImpl: async () => ({ ok: true }),
   });
   const context = { client: { key: "connection-a" } };
@@ -275,7 +272,7 @@ test("a connection gets three launch notifications per ten minutes", async () =>
 test("launch notifications stop at thirty an hour across all connections", async () => {
   let clock = 0;
   let sent = 0;
-  const beacon = createBeacon({ baseUrl: "http://waha.example", apiKey: "k", chatId: "120@g.us", now: () => clock,
+  const beacon = createBeacon({ baseUrl: "http://notify.example", apiKey: "k", now: () => clock,
     fetchImpl: async () => { sent += 1; return { ok: true }; },
   });
   const launch = (n) => beacon.sendLaunch({ visitor: `visitor${String(n).padStart(4, "0")}` }, { client: { key: `connection-${n}` } });
@@ -286,4 +283,10 @@ test("launch notifications stop at thirty an hour across all connections", async
   clock = 60 * 60_000 + 1;
   await launch(31);
   assert.equal(sent, 31);
+});
+
+test("the beacon is ready with a relay address and token alone", () => {
+  assert.equal(createBeacon({ baseUrl: "http://notify.example", apiKey: "k" }).ready(), true);
+  assert.equal(createBeacon({ baseUrl: "http://notify.example", apiKey: "" }).ready(), false);
+  assert.equal(createBeacon({ baseUrl: "", apiKey: "k" }).ready(), false);
 });

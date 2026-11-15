@@ -44,7 +44,7 @@ The server listens on port 8080. Configuration comes from process environment va
 | `MEMPOOL_API_BASE` | Mempool backend serving the fixed Bitcoin API routes |
 | `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL` | OpenAI-compatible chat endpoint, credential and default model |
 | `CHAT_MODELS` | Comma-separated public model allowlist |
-| `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION`, `WAHA_BEACON_CHAT_ID` | Server-side notification transport and destination |
+| `NOTIFY_URL`, `NOTIFY_TOKEN` | Notify relay address and its bearer token. The site holds no messaging credential |
 | `MIMIR_URL`, `MIMIR_TENANT` | Read-only site, multi-cluster, uptime and Job Scout aggregate metrics |
 | `PUBLIC_NODE_ALIASES` | `real=shown` pairs for the node panel; unmapped machines read as `node-01` |
 | `LIGHTNING_ADDRESS`, `BTCPAY_URL` | Optional public payment destination |
@@ -60,9 +60,11 @@ Job Scout reads `job_scout_positions` and exporter refresh health from Mimir; th
 
 Bitcoin is exposed only through allowlisted `/api/bitcoin/*` routes. Never point them at bitcoind RPC or expose Fulcrum. Chat has catalog grounding and no live-data tools; upstream model discovery is filtered through the public allowlist. No conversation database is required.
 
-Launch notifications occur when a visitor chooses Take the controls. Relay messages require a separate explicit submission. WAHA receives connection/browser context and submitted text; failure does not block flight. Request logs include visitor addresses, and chat logs include prompt/reply excerpts — this is deliberate conversation observability, not a leak, and it means the logs are personal data. Retention, who may read the conversation view, and any stronger disclosure are deployment decisions: record the effective values where the deployment lives, not here, and set them before enabling collection. Never commit logs or captured notification payloads.
+Launch notifications occur when a visitor chooses Take the controls. Relay messages require a separate explicit submission. The notify relay receives connection/browser context and submitted text; failure does not block flight. Request logs include visitor addresses, and chat logs include prompt/reply excerpts — this is deliberate conversation observability, not a leak, and it means the logs are personal data. Retention, who may read the conversation view, and any stronger disclosure are deployment decisions: record the effective values where the deployment lives, not here, and set them before enabling collection. Never commit logs or captured notification payloads.
 
 Logging-only bounds are applied to the log copy alone. Clipping a visitor or orbit identifier for storage must never change routing, quotas, grounding or the message actually sent. A refusal is not an upstream failure: an invalid orbit, an unconfigured service and a lost capacity race log as `rejected`, `unavailable` and `busy`, and none of them increments the chat error rate, so that metric measures the upstream rather than our own gatekeeping.
+
+The notify relay is a second entrypoint in the same image: `node relay.mjs`. Run it as a separate workload that only the site can reach. It reads `NOTIFY_TOKEN`, `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION` and `WAHA_BEACON_CHAT_ID`, refuses to start without them, accepts `POST /notify` with the bearer token and a `kind` and `text`, sends only to its one configured destination and stops at sixty messages an hour.
 
 ## Deploy and verify
 

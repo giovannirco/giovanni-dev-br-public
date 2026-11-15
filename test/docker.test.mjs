@@ -57,6 +57,15 @@ test("the runtime image carries every module the server imports", () => {
     );
 });
 
+test("the runtime image carries every module the notify relay imports", () => {
+  const copies = runtimeCopies();
+  for (const file of runtimeModules("relay.mjs").files)
+    assert.ok(
+      copies.some((pattern) => covers(pattern, file)),
+      `${file} is imported by relay.mjs but no Dockerfile COPY brings it into the runtime image`,
+    );
+});
+
 test("the runtime image carries the built site and the catalog", () => {
   const copies = runtimeCopies();
   for (const needed of ["dist", "data"])
