@@ -250,11 +250,40 @@ test("launches have separate connection limits and refund failed delivery", asyn
   await assert.rejects(() => beacon.sendLaunch(null, context), { status: 400 });
   await assert.rejects(() => beacon.sendLaunch({ visitor: "anonabcdefgh" }, context), { status: 503 });
   healthy = true;
-  for (let i = 0; i < 10; i++) await beacon.sendLaunch({ visitor: `visitor00${i}` }, context);
+  for (let i = 0; i < 3; i++) await beacon.sendLaunch({ visitor: `visitor00${i}` }, context);
   await assert.rejects(() => beacon.sendLaunch({ visitor: "rotatedvisitor" }, context), { status: 429 });
   await beacon.send({ visitor: "anonabcdefgh", relayId: "heliograph" }, context);
-  assert.equal(sent.length, 11);
+  assert.equal(sent.length, 4);
   assert.match(sent[0].text, /orrery launch/);
-  assert.match(sent[10].text, /Heliograph/);
+  assert.match(sent[3].text, /Heliograph/);
   assert.deepEqual(Object.keys(sent[0]).sort(), ["chatId", "session", "text"]);
+});
+
+test("a connection gets three launch notifications per ten minutes", async () => {
+  let clock = 0;
+  const beacon = createBeacon({ baseUrl: "http://waha.example", apiKey: "k", chatId: "120@g.us", now: () => clock,
+    fetchImpl: async () => ({ ok: true }),
+  });
+  const context = { client: { key: "connection-a" } };
+  for (let i = 0; i < 3; i++) await beacon.sendLaunch({ visitor: `visitor00${i}` }, context);
+  clock = 9 * 60_000;
+  await assert.rejects(() => beacon.sendLaunch({ visitor: "visitor003" }, context), { status: 429 });
+  clock = 10 * 60_000 + 1;
+  await beacon.sendLaunch({ visitor: "visitor004" }, context);
+});
+
+test("launch notifications stop at thirty an hour across all connections", async () => {
+  let clock = 0;
+  let sent = 0;
+  const beacon = createBeacon({ baseUrl: "http://waha.example", apiKey: "k", chatId: "120@g.us", now: () => clock,
+    fetchImpl: async () => { sent += 1; return { ok: true }; },
+  });
+  const launch = (n) => beacon.sendLaunch({ visitor: `visitor${String(n).padStart(4, "0")}` }, { client: { key: `connection-${n}` } });
+  for (let n = 0; n < 30; n++) await launch(n);
+  clock = 59 * 60_000;
+  await assert.rejects(() => launch(30), { status: 429 });
+  assert.equal(sent, 30);
+  clock = 60 * 60_000 + 1;
+  await launch(31);
+  assert.equal(sent, 31);
 });
