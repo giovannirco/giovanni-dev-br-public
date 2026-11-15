@@ -29,6 +29,7 @@ COPY --from=build --chown=gio:gio /app/data ./data
 COPY --from=build --chown=gio:gio /app/server.mjs ./server.mjs
 COPY --from=build --chown=gio:gio /app/relay.mjs ./relay.mjs
 COPY --from=build --chown=gio:gio /app/metrics-proxy.mjs ./metrics-proxy.mjs
+COPY --from=build --chown=gio:gio /app/ai-proxy.mjs ./ai-proxy.mjs
 COPY --from=build --chown=gio:gio /app/src/*.mjs ./src/
 COPY --from=build --chown=gio:gio /app/package.json ./package.json
 COPY --from=deps --chown=gio:gio /app/node_modules ./node_modules
