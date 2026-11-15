@@ -245,3 +245,19 @@ test("API answers are never stored by anything in between", async () => {
   const response = await fetch(`${base}/api/healthz`);
   assert.equal(response.headers.get("cache-control"), "no-store");
 });
+
+test("hidden paths are not answered with the application shell", async () => {
+  for (const path of ["/.env", "/.git/config", "/.aws/credentials", "/assets/.htpasswd"]) {
+    const response = await fetch(`${base}${path}`);
+    assert.equal(response.status, 404, `${path} was served`);
+  }
+});
+
+test("the vulnerability disclosure contact is published as plain text", async () => {
+  const response = await fetch(`${base}/.well-known/security.txt`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /^text\/plain/);
+  const body = await response.text();
+  assert.match(body, /^Contact: https:\/\//m);
+  assert.match(body, /^Expires: \d{4}-\d{2}-\d{2}T/m);
+});

@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
 ENV HOME=/tmp
-RUN apk upgrade --no-cache && rm -rf /usr/local/lib/node_modules/npm /opt/yarn* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
+RUN apk upgrade --no-cache && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/corepack /opt/yarn* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
 RUN addgroup -S gio && adduser -S -G gio -u 10001 gio
 COPY --from=build --chown=gio:gio /app/dist ./dist
 COPY --from=build --chown=gio:gio /app/data ./data

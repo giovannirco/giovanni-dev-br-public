@@ -85,6 +85,7 @@ const types = {
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".txt": "text/plain; charset=utf-8",
   ".woff2": "font/woff2",
   ".map": "application/json; charset=utf-8",
 };
@@ -135,6 +136,7 @@ async function proxyBitcoin(path, upstreamBase) {
 
 async function staticFile(urlPath) {
   const rel = urlPath === "/" ? "/index.html" : urlPath;
+  if (rel.split("/").some((part, i) => part.startsWith(".") && !(i === 1 && part === ".well-known"))) return null;
   const file = normalize(join(dist, rel));
   if (!file.startsWith(dist + sep)) return null;
   try {
