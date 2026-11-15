@@ -11,3 +11,6 @@ playwright-report/
 
 loop/
 !.env.example
+
+# Local security audit notes (contain deployment topology; never commit)
+security-audit/
