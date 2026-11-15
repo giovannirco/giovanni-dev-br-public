@@ -84,3 +84,10 @@ test("packages the server imports by name are installed in the runtime image", (
       `${name} is imported at runtime but is not a production dependency`,
     );
 });
+
+test("the runtime image ships no package manager", () => {
+  const lines = readFileSync(resolve(root, "Dockerfile"), "utf8").split("\n");
+  const runtime = lines.slice(lines.findLastIndex((line) => /^FROM\s/.test(line))).join("\n");
+  for (const tool of ["node_modules/npm", "node_modules/corepack", "/usr/local/bin/corepack", "/usr/local/bin/npx"])
+    assert.ok(runtime.includes(tool), `${tool} is left in the runtime image`);
+});
