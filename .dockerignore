@@ -13,3 +13,5 @@ loop
 test
 test-results
 playwright-report
+_worktrees
+security-audit

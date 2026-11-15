@@ -23,13 +23,16 @@ ENV HOST=0.0.0.0
 ENV HOME=/tmp
 RUN apk upgrade --no-cache && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/corepack /opt/yarn* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
 RUN addgroup -S gio && adduser -S -G gio -u 10001 gio
+RUN for f in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do if [ "$(/bin/busybox readlink "$f")" = /bin/busybox ]; then /bin/busybox rm "$f"; fi; done; /bin/busybox rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk /bin/busybox
 COPY --from=build --chown=gio:gio /app/dist ./dist
 COPY --from=build --chown=gio:gio /app/data ./data
 COPY --from=build --chown=gio:gio /app/server.mjs ./server.mjs
 COPY --from=build --chown=gio:gio /app/relay.mjs ./relay.mjs
+COPY --from=build --chown=gio:gio /app/metrics-proxy.mjs ./metrics-proxy.mjs
 COPY --from=build --chown=gio:gio /app/src/*.mjs ./src/
 COPY --from=build --chown=gio:gio /app/package.json ./package.json
 COPY --from=deps --chown=gio:gio /app/node_modules ./node_modules
 USER 10001
 EXPOSE 8080
+ENTRYPOINT []
 CMD ["node", "server.mjs"]

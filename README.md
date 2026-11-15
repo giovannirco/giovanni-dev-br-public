@@ -66,6 +66,10 @@ Logging-only bounds are applied to the log copy alone. Clipping a visitor or orb
 
 The notify relay is a second entrypoint in the same image: `node relay.mjs`. Run it as a separate workload that only the site can reach. It reads `NOTIFY_TOKEN`, `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION` and `WAHA_BEACON_CHAT_ID`, refuses to start without them, accepts `POST /notify` with the bearer token and a `kind` and `text`, sends only to its one configured destination and stops at sixty messages an hour.
 
+The metrics read proxy is a third entrypoint: `node metrics-proxy.mjs`. Point the site's `MIMIR_URL` at it and give the proxy `MIMIR_UPSTREAM_URL` and `MIMIR_TENANT`. It forwards one thing, a `GET` instant query with a single `query` parameter, under its own tenant, so the site needs no network path to the metrics backend's write, log or trace routes.
+
+The runtime image has no shell, BusyBox tools or package installer. Debug with `node -e`.
+
 ## Deploy and verify
 
 `Dockerfile` builds the static frontend and Node server, runs as UID 10001, and exposes port 8080. Build for the target architecture, smoke-test `/api/healthz` with a read-only root filesystem and writable `/tmp`, then publish to your registry. Keep image digest pins and runtime configuration in your private deployment repository. Pushing `master` runs `.github/workflows/release.yml`, which publishes `ghcr.io/giovannirco/giovanni-dev-br-public:<full-commit-sha>` and `latest` for Linux AMD64 and reports the digest. It does not update deployment configuration. This repository contains no deployment credentials or environment-specific rollout workflow.
