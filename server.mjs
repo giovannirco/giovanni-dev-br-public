@@ -586,7 +586,7 @@ export function createApp({
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const log = createLogger();
   // One line at boot saying what this process can actually reach. Names only,
-  // never a credential: "waha: false" after a deploy is the fastest way to see
+  // never a credential: "notify: false" after a deploy is the fastest way to see
   // that a secret did not make it into the pod.
   log.info(
     {
@@ -596,7 +596,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       configured: {
         mempool: Boolean(mempool),
         llm: Boolean(process.env.OPENAI_API_KEY),
-        waha: Boolean(process.env.WAHA_BASE_URL && process.env.WAHA_API_KEY && process.env.WAHA_BEACON_CHAT_ID),
+        notify: Boolean(process.env.NOTIFY_URL && process.env.NOTIFY_TOKEN),
         mimir: Boolean(process.env.MIMIR_URL),
         scout: Boolean(process.env.JOB_SCOUT_URL),
         tip: Boolean(process.env.LIGHTNING_ADDRESS || process.env.BTCPAY_URL),
