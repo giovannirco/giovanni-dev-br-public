@@ -66,6 +66,15 @@ test("the runtime image carries every module the notify relay imports", () => {
     );
 });
 
+test("the runtime image carries every module the AI proxy imports", () => {
+  const copies = runtimeCopies();
+  for (const file of runtimeModules("ai-proxy.mjs").files)
+    assert.ok(
+      copies.some((pattern) => covers(pattern, file)),
+      `${file} is imported by ai-proxy.mjs but no Dockerfile COPY brings it into the runtime image`,
+    );
+});
+
 test("the runtime image carries every module the metrics proxy imports", () => {
   const copies = runtimeCopies();
   for (const file of runtimeModules("metrics-proxy.mjs").files)

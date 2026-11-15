@@ -186,7 +186,12 @@ async function readJson(req, limit = 12_000) {
   return parsed;
 }
 
+function share(limit, replicas) {
+  return Math.max(1, Math.ceil(limit / replicas));
+}
+
 export function createApp({
+  replicas = Math.max(1, Number(process.env.REPLICAS) || 1),
   mempoolBase = mempool,
   lightningAddress = process.env.LIGHTNING_ADDRESS || "",
   btcpayUrl = process.env.BTCPAY_URL || "",
@@ -195,11 +200,11 @@ export function createApp({
   openaiModel = process.env.OPENAI_MODEL || "grok-4.6",
   fetchImpl = fetch,
   metrics = createMetrics(),
-  beacon = createBeacon({ fetchImpl }),
+  beacon = createBeacon({ fetchImpl, replicas }),
   // /api/chat is public, unauthenticated, and spends Gio's own LLM gateway
   // quota. Without a ceiling one script can run the house account dry.
-  chatLimit = createRateLimit({ limit: 10, windowMs: 10 * 60_000 }),
-  chatBudget = createRateLimit({ limit: 120, windowMs: 60 * 60_000 }),
+  chatLimit = createRateLimit({ limit: share(10, replicas), windowMs: 10 * 60_000 }),
+  chatBudget = createRateLimit({ limit: share(120, replicas), windowMs: 60 * 60_000 }),
   chatModels = publicModelIds(),
   insight = createInsight({ fetchImpl }),
   log = createLogger(),
@@ -210,17 +215,17 @@ export function createApp({
   // Concurrency, not rate: how many completions may be in flight at once. The
   // per-caller share stops one visitor holding the whole gateway while
   // everyone else waits; the total is what this pod is willing to carry.
-  chatConcurrency = createConcurrency({ limit: 30, perKey: 4 }),
-  readLimit = createRateLimit({ limit: 240, windowMs: 60_000 }),
-  readBudget = createRateLimit({ limit: 1200, windowMs: 60_000 }),
+  chatConcurrency = createConcurrency({ limit: share(30, replicas), perKey: share(4, replicas) }),
+  readLimit = createRateLimit({ limit: share(240, replicas), windowMs: 60_000 }),
+  readBudget = createRateLimit({ limit: share(1200, replicas), windowMs: 60_000 }),
 } = {}) {
   // The configured default is always offerable, so a narrow allowlist can
   // never leave the picker empty.
   const allowed = [...new Set([...chatModels, openaiModel])];
   const bitcoinCache = createReadCache({ ttlMs: 5000 });
-  const chatAttempts = createRateLimit({ limit: 30, windowMs: 60_000 });
-  const telemetryLimit = createRateLimit({ limit: 120, windowMs: 60_000 });
-  const telemetryBudget = createRateLimit({ limit: 1200, windowMs: 60_000 });
+  const chatAttempts = createRateLimit({ limit: share(30, replicas), windowMs: 60_000 });
+  const telemetryLimit = createRateLimit({ limit: share(120, replicas), windowMs: 60_000 });
+  const telemetryBudget = createRateLimit({ limit: share(1200, replicas), windowMs: 60_000 });
   const listModels = createModelCatalog({ baseUrl: openaiBaseUrl, apiKey: openaiApiKey, fetchImpl, allowed });
   function allowRead(req) {
     return readLimit.take(clientKey(req)).ok && readBudget.take("all").ok;

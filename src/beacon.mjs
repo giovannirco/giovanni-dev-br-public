@@ -151,14 +151,16 @@ export function createBeacon({
   fetchImpl = fetch,
   baseUrl = process.env.NOTIFY_URL || "",
   apiKey = process.env.NOTIFY_TOKEN || "",
+  replicas = 1,
   now = () => Date.now(),
 } = {}) {
+  const share = (limit) => Math.max(1, Math.ceil(limit / replicas));
   // Keyed on the connection, not on a browser-generated id the visitor can
   // rotate at will. The hourly cap is the backstop and stays global.
   const perClient = createRateLimit({ limit: 1, windowMs: COOLDOWN_MS, now });
-  const global = createRateLimit({ limit: HOUR_CAP, windowMs: HOUR_MS, now });
-  const launchClient = createRateLimit({ limit: 3, windowMs: 10 * 60_000, now });
-  const launchGlobal = createRateLimit({ limit: 30, windowMs: HOUR_MS, now });
+  const global = createRateLimit({ limit: share(HOUR_CAP), windowMs: HOUR_MS, now });
+  const launchClient = createRateLimit({ limit: share(3), windowMs: 10 * 60_000, now });
+  const launchGlobal = createRateLimit({ limit: share(30), windowMs: HOUR_MS, now });
   const root = String(baseUrl || "").replace(/\/$/, "");
 
   function ready() {

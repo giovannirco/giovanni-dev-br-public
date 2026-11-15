@@ -68,6 +68,10 @@ The notify relay is a second entrypoint in the same image: `node relay.mjs`. Run
 
 The metrics read proxy is a third entrypoint: `node metrics-proxy.mjs`. Point the site's `MIMIR_URL` at it and give the proxy `MIMIR_UPSTREAM_URL` and `MIMIR_TENANT`. It forwards one thing, a `GET` instant query with a single `query` parameter, under its own tenant, so the site needs no network path to the metrics backend's write, log or trace routes.
 
+The AI proxy is a fourth entrypoint: `node ai-proxy.mjs`. It holds the chat gateway key (`AI_UPSTREAM_URL`, `AI_UPSTREAM_KEY`) and accepts only its own token (`AI_PROXY_TOKEN`). It serves the model list filtered to `CHAT_MODELS` and chat completions for those models, rebuilds each request from an allowlist of fields, caps output tokens and enforces the hourly chat budget in one place. Point the site's `OPENAI_BASE_URL` at it and give the site the proxy token as `OPENAI_API_KEY`.
+
+When the site runs as more than one replica, set `REPLICAS` so each process takes its share of the in-memory limits.
+
 The runtime image has no shell, BusyBox tools or package installer. Debug with `node -e`.
 
 ## Deploy and verify

@@ -200,3 +200,26 @@ test("unconfigured integrations stay offline without making upstream requests", 
     await new Promise(resolve => offline.close(resolve));
   }
 });
+
+test("per-caller limits are shared out across replicas", async () => {
+  const count = async (replicas) => {
+    const live = createApp({ replicas, lightningAddress: "", btcpayUrl: "" }).listen(0, "127.0.0.1");
+    await once(live, "listening");
+    try {
+      let accepted = 0;
+      for (let n = 0; n < 125; n++) {
+        const response = await fetch(`http://127.0.0.1:${live.address().port}/api/telemetry`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ visitor: "replicatest01", event: "play" }),
+        });
+        if (response.status !== 429) accepted += 1;
+      }
+      return accepted;
+    } finally {
+      await new Promise((resolve) => live.close(resolve));
+    }
+  };
+  assert.equal(await count(1), 120);
+  assert.equal(await count(2), 60);
+});
